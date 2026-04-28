@@ -11,8 +11,8 @@
 	
   <PropertyGroup>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>Placeholder</PackageProjectUrl>
-    <RepositoryUrl>Placeholder</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/alex-jenkins-dev/Metrician</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/alex-jenkins-dev/Metrician</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>metrician;node-graph;plotting;plugin</PackageTags>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
