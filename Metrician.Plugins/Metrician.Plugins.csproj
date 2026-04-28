@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Plugin discovery + loading.  Pure reflection over the contract
+         marker interfaces (INode in Graph.Contracts, IRenderableFactory<T>
+         in Renderable.Contracts) so plugin authors don't need a Metrician-
+         specific attribute on every type — the interface itself is the
+         marker.  Two optional attributes (MetricianPluginExclude /
+         MetricianNodeMenu) cover opt-out and menu-label overrides for
+         the cases where they help. -->
+    <TargetFrameworks>net8.0-windows;net10.0-windows</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Metrician.Graph.Contracts\Metrician.Graph.Contracts.csproj" />
+    <ProjectReference Include="..\Metrician.Renderable.Contracts\Metrician.Renderable.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

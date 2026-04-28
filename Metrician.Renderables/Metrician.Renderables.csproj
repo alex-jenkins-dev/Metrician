@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0-windows;net10.0-windows</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- PointCloud uses unsafe pixel writes via LockBits for high-throughput
+         rendering (10x+ faster than per-point GDI+ FillRectangle). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Description>Metrician built-in renderables: PointCloud, AxisRenderable, CircleRenderable, ConeRenderable, CylinderRenderable, LabelledPoint, LineSegmentRenderable, LineSet, PlaneRenderable, RayRenderable, SphereRenderable, SurfaceNormalRenderable. Compose these in your IRenderableFactory output rather than rolling your own GDI+.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- System.Drawing in lieu of UseWindowsForms; this project does not
+         use any WinForms types. -->
+    <PackageReference Include="System.Drawing.Common" Version="8.0.10" />
+    <Using Include="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Metrician.Renderable.Contracts\Metrician.Renderable.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

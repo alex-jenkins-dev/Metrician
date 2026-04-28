@@ -1,0 +1,30 @@
+// Metrician plugin exclusions.
+//
+// One pattern per line. // starts a comment; blank lines are ignored.
+// '*' wildcards match any sequence of characters. Other characters are
+// literal -- the dot in 'Foo.Bar' is just a dot.
+//
+// Two pattern scopes, distinguished by suffix:
+//
+//   <pattern>.dll   matches the assembly's simple name only (the .dll
+//                   suffix is stripped before matching). Skips the whole
+//                   DLL up front; useful when an assembly happens to
+//                   share its name with a namespace and you only want
+//                   to drop one of them.
+//
+//   <pattern>       matches the type's namespace OR its full name.
+//                   Used to surgically drop individual types or whole
+//                   namespaces without affecting other types in the
+//                   same DLL.
+//
+// All lines below this point are commented out, so nothing is excluded
+// by default. Add patterns to block plugin contributions you don't want
+// loaded.
+
+// Examples of patterns you might reach for once you have plugins to
+// filter (none of these match anything in a stock build):
+//
+// SomePlugin.dll                        -- whole assembly
+// SomePlugin.NodeFamily.*               -- a namespace and its children
+// SomePlugin.NodeFamily.LegacyNode      -- one specific type
+// *Helix*                               -- any type with "Helix" in it

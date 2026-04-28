@@ -1,0 +1,24 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Single point of control for every assembly's version. -->
+    <Version>0.0.1</Version>
+    <Product>Metrician</Product>
+    <Authors>Alex Jenkins</Authors>
+    <Company>Alex Jenkins</Company>
+    <Copyright>Copyright (c) Alex Jenkins</Copyright>
+  </PropertyGroup>
+	
+  <PropertyGroup>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>Placeholder</PackageProjectUrl>
+    <RepositoryUrl>Placeholder</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>metrician;node-graph;plotting;plugin</PackageTags>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+</Project>
