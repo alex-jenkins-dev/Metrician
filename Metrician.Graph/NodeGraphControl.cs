@@ -17,6 +17,16 @@ namespace Metrician.Graph
         public NodeGraph Graph { get; }
         public NodeGraphTheme Theme { get; }
 
+        [System.ComponentModel.Browsable(false)]
+        [System.ComponentModel.DesignerSerializationVisibility(
+            System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+        public IValueConverterRegistry? Converters { get; set; }
+
+        [System.ComponentModel.Browsable(false)]
+        [System.ComponentModel.DesignerSerializationVisibility(
+            System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+        public WireConversions Conversions { get; set; } = new();
+
         private readonly NodePainter _painter;
         private readonly NodeGraphContextMenuBuilder _menuBuilder;
 
@@ -117,7 +127,7 @@ namespace Metrician.Graph
                             NodePainter.DrawWire(g,
                                 NodeGeometry.GetPinCanvasPos(input.Source, Theme),
                                 NodeGeometry.GetPinCanvasPos(input, Theme),
-                                Theme.Wire);
+                                Conversions.IsConverted(input) ? Theme.WireConverted : Theme.Wire);
 
                 foreach (var node in Graph.Nodes)
                     _painter.DrawNode(g, node, ReferenceEquals(node, _selectedNode));
@@ -169,7 +179,7 @@ namespace Metrician.Graph
             {
                 if (inPin.Source != null)
                 {
-                    inPin.TryConnect(null);
+                    ValueConverterRegistryExtensions.Disconnect(inPin, Conversions);
                     if (inPin.Owner is IVariadicInputs v) v.CompactInputs();
                     GraphChanged?.Invoke(this, EventArgs.Empty);
                     Invalidate();
@@ -256,7 +266,7 @@ namespace Metrician.Graph
                 var canvasPt = ScreenToCanvas(e.Location);
                 var target = NodeGraphHitTest.FindInputPinAt(Graph, canvasPt, Theme);
 
-                if (target != null && target.TryConnect(_wireSource))
+                if (target != null && Converters.TryWire(target, _wireSource, Conversions))
                 {
                     if (target.Owner is IVariadicInputs v) v.CompactInputs();
                     GraphChanged?.Invoke(this, EventArgs.Empty);
@@ -350,7 +360,7 @@ namespace Metrician.Graph
 
         private void DeleteNode(INode node)
         {
-            Graph.DeleteNode(node);
+            Graph.DeleteNode(node, Conversions);
             if (ReferenceEquals(SelectedNode, node))
                 SelectedNode = null;
             GraphChanged?.Invoke(this, EventArgs.Empty);

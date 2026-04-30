@@ -26,6 +26,9 @@ namespace Metrician.App
             foreach (var factory in plugins.Factories)
                 factory.RegisterWith(session.Registry);
 
+            foreach (var converter in plugins.Converters)
+                converter.RegisterWith(session.Converters);
+
             foreach (var node in plugins.Nodes)
                 session.GraphControl.AvailableNodes.Add(
                     new NodeMenuEntry(node.Label, node.Factory)

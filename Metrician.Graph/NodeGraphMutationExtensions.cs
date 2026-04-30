@@ -21,7 +21,7 @@ namespace Metrician.Graph
         }
 
         public static void DeleteNode(
-            this NodeGraph graph, INode node)
+            this NodeGraph graph, INode node, WireConversions? conversions = null)
         {
             var compactTargets = new HashSet<IVariadicInputs>();
             foreach (var other in graph.Nodes)
@@ -31,7 +31,7 @@ namespace Metrician.Graph
                 {
                     if (inPin.Source != null && ReferenceEquals(inPin.Source.Owner, node))
                     {
-                        inPin.TryConnect(null);
+                        ValueConverterRegistryExtensions.Disconnect(inPin, conversions);
                         if (other is IVariadicInputs v) compactTargets.Add(v);
                     }
                 }

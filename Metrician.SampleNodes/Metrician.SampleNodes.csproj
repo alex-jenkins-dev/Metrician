@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWindowsForms>true</UseWindowsForms>
+    <IsPackable>false</IsPackable>
+    <Description>Sample plugin demonstrating Metrician nodes, factories, and value converters. Drops into the host's Plugins folder at build.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Metrician.Graph.Contracts\Metrician.Graph.Contracts.csproj" />
+    <ProjectReference Include="..\Metrician.Renderable.Contracts\Metrician.Renderable.Contracts.csproj" />
+    <ProjectReference Include="..\Metrician.Core\Metrician.Core.csproj" />
+    <ProjectReference Include="..\Metrician.Rendering\Metrician.Rendering.csproj" />
+    <ProjectReference Include="..\Metrician.Renderables\Metrician.Renderables.csproj" />
+  </ItemGroup>
+
+  <Target Name="CopyToAppPlugins" AfterTargets="Build">
+    <PropertyGroup>
+      <AppPluginsDir>$(MSBuildThisFileDirectory)..\Metrician.App\bin\$(Configuration)\$(TargetFramework)\Plugins\</AppPluginsDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(AppPluginsDir)" Condition="!Exists('$(AppPluginsDir)')" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(AppPluginsDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

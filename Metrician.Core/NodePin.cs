@@ -11,7 +11,10 @@ namespace Metrician.Core
         public INode Owner { get; }
         public Type ValueType => typeof(T);
         public bool IsInput => true;
-        public INodeOutput? Source { get; private set; }
+
+        private IValueProvider? _provider;
+
+        public INodeOutput? Source => _provider?.Source;
 
         public NodeInput(INode owner, string name)
         {
@@ -19,12 +22,11 @@ namespace Metrician.Core
             Name = name;
         }
 
-        public bool TryConnect(INodeOutput? source)
+        public bool TryConnect(IValueProvider? provider)
         {
-            if (source is null) { Source = null; return true; }
-            if (!ValueType.IsAssignableFrom(source.ValueType)) return false;
-
-            Source = source;
+            if (provider is null) { _provider = null; return true; }
+            if (!ValueType.IsAssignableFrom(provider.OutputType)) return false;
+            _provider = provider;
             return true;
         }
 
@@ -32,7 +34,7 @@ namespace Metrician.Core
         {
             get
             {
-                var v = Source?.Value;
+                var v = _provider?.GetValue();
                 return v is T t ? t : default;
             }
         }

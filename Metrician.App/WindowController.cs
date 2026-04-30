@@ -57,7 +57,8 @@ namespace Metrician.App
             {
                 var script = GraphScriptText.ReadFile(scriptPath);
                 var factories = PluginInstaller.ScriptFactories(_session, _plugins);
-                var nodes = GraphScriptApplier.Apply(script, factories);
+                var nodes = GraphScriptApplier.Apply(
+                    script, factories, _session.Converters, _session.Conversions);
                 if (nodes.Count == 0) return;
                 if (script.HasPositions)
                     _session.GraphControl.AddNodes(nodes);
@@ -137,7 +138,8 @@ namespace Metrician.App
             {
                 var script = GraphScriptText.ReadFile(dlg.FileName);
                 var factories = PluginInstaller.ScriptFactories(_session, _plugins);
-                nodes = GraphScriptApplier.Apply(script, factories);
+                nodes = GraphScriptApplier.Apply(
+                    script, factories, _session.Converters, _session.Conversions);
                 hadPositions = script.HasPositions;
                 return nodes.Count > 0;
             }

@@ -65,6 +65,33 @@ namespace Metrician.Plugins
         }
     }
 
+    public sealed class DiscoveredConverter
+    {
+        public Type FromType { get; }
+
+        public Type ToType { get; }
+
+        public object Converter { get; }
+
+        public Type ConverterType { get; }
+
+        public DiscoveredConverter(Type fromType, Type toType, object converter, Type converterType)
+        {
+            FromType = fromType;
+            ToType = toType;
+            Converter = converter;
+            ConverterType = converterType;
+        }
+
+        public void RegisterWith(IValueConverterRegistry registry)
+        {
+            var registerMethod = typeof(IValueConverterRegistry)
+                .GetMethod(nameof(IValueConverterRegistry.Register))!;
+            var generic = registerMethod.MakeGenericMethod(FromType, ToType);
+            generic.Invoke(registry, new[] { Converter });
+        }
+    }
+
     /// <summary>
     /// Aggregated outcome of one or more loads.
     /// Discoveries are deduplicated by type so <see cref="Merge"/> is safe to call with overlapping inputs.
@@ -73,11 +100,16 @@ namespace Metrician.Plugins
     {
         private readonly List<DiscoveredNode> _nodes = new();
         private readonly List<DiscoveredFactory> _factories = new();
+        private readonly List<DiscoveredConverter> _converters = new();
         private readonly List<string> _errors = new();
         private readonly HashSet<Type> _seenTypes = new();
+        // Dedup keyed by (impl, from, to) so a single class can register
+        // multiple converters as long as each (from, to) pair is distinct.
+        private readonly HashSet<(Type, Type, Type)> _seenConverters = new();
 
         public IReadOnlyList<DiscoveredNode> Nodes => _nodes;
         public IReadOnlyList<DiscoveredFactory> Factories => _factories;
+        public IReadOnlyList<DiscoveredConverter> Converters => _converters;
 
         /// <summary>Non-fatal load errors, one per failed assembly, file, or type.</summary>
         public IReadOnlyList<string> Errors => _errors;
@@ -94,6 +126,13 @@ namespace Metrician.Plugins
                 _factories.Add(factory);
         }
 
+        internal void AddConverter(DiscoveredConverter converter)
+        {
+            var key = (converter.ConverterType, converter.FromType, converter.ToType);
+            if (_seenConverters.Add(key))
+                _converters.Add(converter);
+        }
+
         internal void AddError(string message) => _errors.Add(message);
 
         /// <summary>Folds another result into this one, skipping duplicates.</summary>
@@ -101,6 +140,7 @@ namespace Metrician.Plugins
         {
             foreach (var node in other._nodes) AddNode(node);
             foreach (var factory in other._factories) AddFactory(factory);
+            foreach (var converter in other._converters) AddConverter(converter);
             foreach (var err in other._errors) _errors.Add(err);
         }
     }

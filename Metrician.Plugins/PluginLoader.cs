@@ -9,9 +9,10 @@ using Metrician.Renderable.Contracts;
 namespace Metrician.Plugins
 {
     /// <summary>
-    /// Discovers <see cref="INode"/> subclasses and <see cref="IRenderableFactory{T}"/>
-    /// implementations in assemblies. A type qualifies if it is public, non-abstract,
-    /// has a parameterless ctor, and is not tagged <see cref="MetricianPluginExcludeAttribute"/>.
+    /// Discovers <see cref="INode"/> subclasses, <see cref="IRenderableFactory{T}"/>
+    /// implementations, and <see cref="IValueConverter{TFrom, TTo}"/> implementations
+    /// in assemblies. A type qualifies if it is public, non-abstract, has a
+    /// parameterless ctor, and is not tagged <see cref="MetricianPluginExcludeAttribute"/>.
     /// </summary>
     public sealed class PluginLoader
     {
@@ -112,24 +113,40 @@ namespace Metrician.Plugins
                 }
             }
 
-            // A type can implement IRenderableFactory<T> for multiple Ts; iterate them all.
+            // A type can close IRenderableFactory<T> or IValueConverter<TFrom, TTo>
+            // over multiple type arguments; iterate every closed instantiation.
             foreach (var iface in type.GetInterfaces())
             {
                 if (!iface.IsGenericType) continue;
-                if (iface.GetGenericTypeDefinition() != typeof(IRenderableFactory<>)) continue;
+                var def = iface.GetGenericTypeDefinition();
 
-                try
+                if (def == typeof(IRenderableFactory<>))
                 {
-                    var dataType = iface.GetGenericArguments()[0];
-                    var instance = ctor.Invoke(null);
-                    result.AddFactory(new DiscoveredFactory(dataType, instance, type));
+                    try
+                    {
+                        var dataType = iface.GetGenericArguments()[0];
+                        var instance = ctor.Invoke(null);
+                        result.AddFactory(new DiscoveredFactory(dataType, instance, type));
+                    }
+                    catch (Exception ex)
+                    {
+                        result.AddError($"{type.FullName}: failed to discover IRenderableFactory - {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
+                else if (def == typeof(IValueConverter<,>))
                 {
-                    result.AddError($"{type.FullName}: failed to discover IRenderableFactory - {ex.Message}");
+                    try
+                    {
+                        var args = iface.GetGenericArguments();
+                        var instance = ctor.Invoke(null);
+                        result.AddConverter(new DiscoveredConverter(args[0], args[1], instance, type));
+                    }
+                    catch (Exception ex)
+                    {
+                        result.AddError($"{type.FullName}: failed to discover IValueConverter - {ex.Message}");
+                    }
                 }
             }
-
         }
 
         private static (string label, string vendor) ResolveNodeMetadata(

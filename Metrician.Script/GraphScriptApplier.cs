@@ -15,7 +15,10 @@ namespace Metrician.Script
     public static class GraphScriptApplier
     {
         public static IReadOnlyList<INode> Apply(
-            GraphScript script, IReadOnlyList<ScriptNodeFactory> available)
+            GraphScript script,
+            IReadOnlyList<ScriptNodeFactory> available,
+            IValueConverterRegistry? converters = null,
+            WireConversions? conversions = null)
         {
             var (byShort, byFull) = BuildLookup(available);
             var nodesById = new Dictionary<string, INode>(StringComparer.Ordinal);
@@ -60,7 +63,7 @@ namespace Metrician.Script
                 var outPin = ResolveOutputPin(src, c.SourcePin);
                 var inPin  = ResolveInputPin(dst,  c.TargetPin);
 
-                if (!inPin.TryConnect(outPin))
+                if (!converters.TryWire(inPin, outPin, conversions))
                     throw new ScriptException(
                         $"Type mismatch: cannot connect '{c.SourceId}.{c.SourcePin}' " +
                         $"({outPin.ValueType.Name}) to '{c.TargetId}.{c.TargetPin}' " +

@@ -26,6 +26,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Build-only reference: SampleNodes is loaded at runtime from Plugins/.
+         Its build target copies its DLL into our output. ReferenceOutputAssembly=false
+         keeps it off our compile-time graph; otherwise it would not be a plugin. -->
+    <ProjectReference Include="..\Metrician.SampleNodes\Metrician.SampleNodes.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Lands at $(OutDir)Plugins/exclusions.txt where PluginInstaller looks
          for it. PreserveNewest so a hand-edited runtime copy survives a
          non-source rebuild. -->

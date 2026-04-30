@@ -1,0 +1,13 @@
+// MIT License - Copyright (c) 2026 Alex Jenkins
+// See LICENSE file for full terms
+
+using System.Numerics;
+using Metrician.Graph.Contracts;
+
+namespace Metrician.SampleNodes
+{
+    public sealed class FloatToVector3Converter : IValueConverter<float, Vector3>
+    {
+        public Vector3 Convert(float value) => new(value, 0f, 0f);
+    }
+}

@@ -3,6 +3,7 @@
 
 using Metrician.Core;
 using Metrician.Graph;
+using Metrician.Graph.Contracts;
 
 namespace Metrician.App
 {
@@ -14,6 +15,8 @@ namespace Metrician.App
     internal sealed class SessionState
     {
         public RenderableRegistry Registry { get; } = new();
+        public ValueConverterRegistry Converters { get; } = new();
+        public WireConversions Conversions { get; } = new();
         public NodeGraph Graph { get; } = new();
         public NodeGraphControl GraphControl { get; }
         public PropertyGrid PropertyGrid { get; }
@@ -21,7 +24,12 @@ namespace Metrician.App
 
         public SessionState()
         {
-            GraphControl = new NodeGraphControl(Graph) { Dock = DockStyle.Fill };
+            GraphControl = new NodeGraphControl(Graph)
+            {
+                Dock = DockStyle.Fill,
+                Converters = Converters,
+                Conversions = Conversions,
+            };
 
             PropertyGrid = new PropertyGrid
             {

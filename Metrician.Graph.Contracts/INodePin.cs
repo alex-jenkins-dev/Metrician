@@ -25,9 +25,11 @@ namespace Metrician.Graph.Contracts
         INodeOutput? Source { get; }
 
         /// <summary>
-        /// Wires this input to <paramref name="source"/>; pass null to disconnect.
+        /// Wires this input through <paramref name="provider"/>; pass null to
+        /// disconnect. Returns false if <see cref="IValueProvider.OutputType"/>
+        /// is not assignable to the pin's <see cref="INodePin.ValueType"/>.
         /// </summary>
-        bool TryConnect(INodeOutput? source);
+        bool TryConnect(IValueProvider? provider);
     }
 
     /// <summary>
