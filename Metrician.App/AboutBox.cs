@@ -2,6 +2,7 @@
 // See LICENSE file for full terms
 
 using System.Numerics;
+using System.Reflection;
 using Metrician.Rendering;
 using Metrician.Renderables;
 using Metrician.Viewport;
@@ -95,7 +96,7 @@ namespace Metrician.App
                 Margin = Padding.Empty,
                 Padding = new Padding(20),
                 Text =
-                    "Metrician (v0.0.1)\r\n" + // TODO: Get from assembly
+                    $"Metrician (v{GetVersion()})\r\n" +
                     "\r\n" +
                     "The greatest metrology diagnostics app in the world, maybe\r\n" +
                     "\r\n" +
@@ -165,5 +166,19 @@ namespace Metrician.App
         }
 
         private static float Lerp(float a, float b, float t) => a + (b - a) * t;
+
+        // InformationalVersion carries the Directory.Build.props Version, with
+        // a "+commit" suffix appended by SourceLink that we strip for display.
+        private static string GetVersion()
+        {
+            var asm = typeof(AboutBox).Assembly;
+            var info = asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            if (!string.IsNullOrEmpty(info))
+            {
+                int plus = info.IndexOf('+');
+                return plus < 0 ? info : info[..plus];
+            }
+            return asm.GetName().Version?.ToString(3) ?? "?";
+        }
     }
 }

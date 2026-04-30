@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!-- Single point of control for every assembly's version. -->
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <Product>Metrician</Product>
     <Authors>Alex Jenkins</Authors>
     <Company>Alex Jenkins</Company>
