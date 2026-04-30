@@ -5,7 +5,7 @@
          INodePin, IDynamicNode, IDynamicPins, IVariadicInputs). No
          project references; plugin-author projects pull this in on
          its own. -->
-    <TargetFrameworks>net8.0-windows;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>$(MetricianLibraryFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

@@ -7,7 +7,7 @@
          …) live in Metrician.Rendering and come along transitively for
          consumers.  Plugin authors writing renderers reference this
          and pick up Rendering automatically. -->
-    <TargetFrameworks>net8.0-windows;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>$(MetricianLibraryFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

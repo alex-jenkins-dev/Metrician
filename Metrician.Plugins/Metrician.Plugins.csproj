@@ -8,7 +8,7 @@
          marker.  Two optional attributes (MetricianPluginExclude /
          MetricianNodeMenu) cover opt-out and menu-label overrides for
          the cases where they help. -->
-    <TargetFrameworks>net8.0-windows;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>$(MetricianLibraryFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

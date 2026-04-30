@@ -8,6 +8,11 @@
     <Company>Alex Jenkins</Company>
     <Copyright>Copyright (c) Alex Jenkins</Copyright>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <MetricianLibraryFrameworks>net8.0-windows;net10.0-windows</MetricianLibraryFrameworks>
+    <MetricianHostFramework>net10.0-windows</MetricianHostFramework>
+  </PropertyGroup>
 	
   <PropertyGroup>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

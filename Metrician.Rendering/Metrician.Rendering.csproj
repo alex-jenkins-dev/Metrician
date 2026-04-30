@@ -9,7 +9,7 @@
          types it transitively needs in its public API live here.
          Uses System.Drawing types (Pen, Color) so needs the windows
          TFM + UseWindowsForms. -->
-    <TargetFrameworks>net8.0-windows;net10.0-windows</TargetFrameworks>
+    <TargetFrameworks>$(MetricianLibraryFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Description>Metrician rendering primitives: BoundingBox3D, Ray3D, Camera3D, StandardView, RenderContext, StrokeStyle. Concrete types referenced by Metrician.Renderable.Contracts' interface signatures.</Description>
