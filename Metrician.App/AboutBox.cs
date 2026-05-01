@@ -3,9 +3,9 @@
 
 using System.Numerics;
 using System.Reflection;
-using Metrician.Rendering;
-using Metrician.Renderables;
-using Metrician.Viewport;
+using Metrician.Library.Rendering;
+using Metrician.Library.Renderables;
+using Metrician.Library.Viewport;
 
 namespace Metrician.App
 {

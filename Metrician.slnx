@@ -3,13 +3,12 @@
   <Project Path="Metrician.Core.Graph/Metrician.Core.Graph.csproj" />
   <Project Path="Metrician.Core.Scripting/Metrician.Core.Scripting.csproj" />
   <Project Path="Metrician.Core.ScriptBinding/Metrician.Core.ScriptBinding.csproj" />
-  <Project Path="Metrician.Bridge/Metrician.Bridge.csproj" />
+  <Project Path="Metrician.Library.Bridge/Metrician.Library.Bridge.csproj" />
   <Project Path="Metrician.Model.Graph/Metrician.Model.Graph.csproj" />
   <Project Path="Metrician.Presentation.Graph/Metrician.Presentation.Graph.csproj" />
-  <Project Path="Metrician.Contracts.Renderables/Metrician.Contracts.Renderables.csproj" />
-  <Project Path="Metrician.Rendering/Metrician.Rendering.csproj" />
+  <Project Path="Metrician.Library.Rendering/Metrician.Library.Rendering.csproj" />
   <Project Path="Metrician.Core.Plugins/Metrician.Core.Plugins.csproj" />
-  <Project Path="Metrician.Renderables/Metrician.Renderables.csproj" Id="f060a9dc-d2a2-4a7f-b10b-bc1e4acb9419" />
+  <Project Path="Metrician.Library.Renderables/Metrician.Library.Renderables.csproj" Id="f060a9dc-d2a2-4a7f-b10b-bc1e4acb9419" />
   <Project Path="Metrician.Nodes.Geometry/Metrician.Nodes.Geometry.csproj" />
-  <Project Path="Metrician.Viewport/Metrician.Viewport.csproj" Id="dc4b3f4c-91e1-4f2f-9fed-cd62b0a5bd43" />
+  <Project Path="Metrician.Library.Viewport/Metrician.Library.Viewport.csproj" Id="dc4b3f4c-91e1-4f2f-9fed-cd62b0a5bd43" />
 </Solution>

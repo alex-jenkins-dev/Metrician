@@ -3,8 +3,8 @@
 
 using System.Collections.ObjectModel;
 
-using Metrician.Contracts.Renderables;
-using Metrician.Viewport;
+using Metrician.Library.Renderables;
+using Metrician.Library.Viewport;
 
 namespace Metrician.App
 {

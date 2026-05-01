@@ -14,15 +14,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Metrician.Contracts.Renderables\Metrician.Contracts.Renderables.csproj" />
-    <ProjectReference Include="..\Metrician.Rendering\Metrician.Rendering.csproj" />
-    <ProjectReference Include="..\Metrician.Renderables\Metrician.Renderables.csproj" />
-    <ProjectReference Include="..\Metrician.Viewport\Metrician.Viewport.csproj" />
+    <ProjectReference Include="..\Metrician.Library.Rendering\Metrician.Library.Rendering.csproj" />
+    <ProjectReference Include="..\Metrician.Library.Renderables\Metrician.Library.Renderables.csproj" />
+    <ProjectReference Include="..\Metrician.Library.Viewport\Metrician.Library.Viewport.csproj" />
     <ProjectReference Include="..\Metrician.Core.Graph\Metrician.Core.Graph.csproj" />
     <ProjectReference Include="..\Metrician.Core.Scripting\Metrician.Core.Scripting.csproj" />
     <ProjectReference Include="..\Metrician.Core.ScriptBinding\Metrician.Core.ScriptBinding.csproj" />
     <ProjectReference Include="..\Metrician.Core.Plugins\Metrician.Core.Plugins.csproj" />
-    <ProjectReference Include="..\Metrician.Bridge\Metrician.Bridge.csproj" />
+    <ProjectReference Include="..\Metrician.Library.Bridge\Metrician.Library.Bridge.csproj" />
     <ProjectReference Include="..\Metrician.Model.Graph\Metrician.Model.Graph.csproj" />
     <ProjectReference Include="..\Metrician.Presentation.Graph\Metrician.Presentation.Graph.csproj" />
     <!-- Build-only dependency: Geometry is loaded at runtime from the Plugins

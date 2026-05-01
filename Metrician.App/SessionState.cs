@@ -1,13 +1,12 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
-using Metrician.Bridge;
+using Metrician.Library.Bridge;
 using Metrician.Core.Graph;
 using Metrician.Core.Plugins;
 using Metrician.Core.ScriptBinding;
 using Metrician.Presentation.Graph;
-using Metrician.Renderables;
-using Metrician.Contracts.Renderables;
+using Metrician.Library.Renderables;
 
 namespace Metrician.App
 {

@@ -3,7 +3,7 @@
 
 using System.Reflection;
 using Metrician.Core.Graph;
-using Metrician.Contracts.Renderables;
+using Metrician.Library.Renderables;
 
 namespace Metrician.Core.Plugins
 {

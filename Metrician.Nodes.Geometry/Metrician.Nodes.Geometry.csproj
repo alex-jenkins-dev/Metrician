@@ -9,10 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Metrician.Contracts.Renderables\Metrician.Contracts.Renderables.csproj" />
+    <ProjectReference Include="..\Metrician.Library.Renderables\Metrician.Library.Renderables.csproj" />
     <ProjectReference Include="..\Metrician.Core.Graph\Metrician.Core.Graph.csproj" />
-    <ProjectReference Include="..\Metrician.Rendering\Metrician.Rendering.csproj" />
-    <ProjectReference Include="..\Metrician.Renderables\Metrician.Renderables.csproj" />
+    <ProjectReference Include="..\Metrician.Library.Rendering\Metrician.Library.Rendering.csproj" />
+    <ProjectReference Include="..\Metrician.Library.Renderables\Metrician.Library.Renderables.csproj" />
   </ItemGroup>
 
   <Target Name="CopyToAppPlugins" AfterTargets="Build">

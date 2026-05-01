@@ -1,9 +1,8 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
-using Metrician.Contracts.Renderables;
-using Metrician.Renderables;
-using Metrician.Rendering;
+using Metrician.Library.Renderables;
+using Metrician.Library.Rendering;
 
 namespace Metrician.Nodes.Geometry
 {

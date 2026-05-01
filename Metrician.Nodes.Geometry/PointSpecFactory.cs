@@ -2,8 +2,7 @@
 // See LICENSE file for full terms
 
 using System.Globalization;
-using Metrician.Contracts.Renderables;
-using Metrician.Renderables;
+using Metrician.Library.Renderables;
 
 namespace Metrician.Nodes.Geometry
 {
