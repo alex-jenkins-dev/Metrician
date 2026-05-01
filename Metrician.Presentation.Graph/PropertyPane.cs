@@ -11,14 +11,25 @@ namespace Metrician.Presentation.Graph
     public sealed class PropertyPane : Panel
     {
         private const string PositionRowKey = "__position";
+        private const string ColorEditorTag = "color-editor";
+        private const int DefaultDescriptionHeight = 120;
+        private const int MinPropertiesHeight = 60;
+        private const int MinDescriptionHeight = 40;
+        private const string PlaceholderText = "(no description)";
 
         private readonly IGraphWorld _world;
         private readonly GraphTheme _theme;
         private readonly Dictionary<string, Control> _editorsByProperty =
             new(StringComparer.Ordinal);
 
+        private readonly SplitContainer _split;
+        private readonly Panel _scrollHost;
+        private readonly TextBox _descriptionBox;
+
         private NodeId? _node;
         private bool _suppressCommit;
+        private bool _updatingScrollbars;
+        private bool _initialSplitApplied;
 
         public PropertyPane(IGraphWorld world, GraphTheme theme)
         {
@@ -27,8 +38,49 @@ namespace Metrician.Presentation.Graph
 
             BackColor = _theme.Background;
             ForeColor = _theme.Text;
-            AutoScroll = true;
-            Padding = new Padding(0);
+            Padding = Padding.Empty;
+
+            _split = new SplitContainer
+            {
+                Dock = DockStyle.Fill,
+                Orientation = Orientation.Horizontal,
+                FixedPanel = FixedPanel.Panel2,
+                BackColor = _theme.MenuBorder,
+                SplitterWidth = 4,
+                Panel1MinSize = MinPropertiesHeight,
+                Panel2MinSize = MinDescriptionHeight,
+            };
+            _split.Panel1.BackColor = _theme.Background;
+            _split.Panel2.BackColor = _theme.Background;
+            _split.Panel2.Padding = new Padding(8, 6, 8, 8);
+
+            _scrollHost = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = _theme.Background,
+                AutoScroll = true,
+                Padding = Padding.Empty,
+            };
+            _split.Panel1.Controls.Add(_scrollHost);
+
+            _descriptionBox = new TextBox
+            {
+                Dock = DockStyle.Fill,
+                Multiline = true,
+                ReadOnly = true,
+                WordWrap = true,
+                ScrollBars = ScrollBars.None,
+                BackColor = _theme.NodeBackground,
+                ForeColor = _theme.Text,
+                BorderStyle = BorderStyle.FixedSingle,
+                TabStop = false,
+                Cursor = Cursors.Default,
+            };
+            _descriptionBox.ClientSizeChanged += (_, _) => UpdateDescriptionScrollbars();
+            _descriptionBox.TextChanged += (_, _) => UpdateDescriptionScrollbars();
+            _split.Panel2.Controls.Add(_descriptionBox);
+
+            Controls.Add(_split);
 
             _world.Properties.Changed += OnPropertyChanged;
             _world.Layout.Changed += OnLayoutChanged;
@@ -37,17 +89,69 @@ namespace Metrician.Presentation.Graph
             BuildEmpty();
         }
 
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            base.OnSizeChanged(e);
+            if (_initialSplitApplied) return;
+            int total = _split.Height;
+            int needed = MinPropertiesHeight + MinDescriptionHeight + _split.SplitterWidth;
+            if (total < needed) return;
+            int distance = total - DefaultDescriptionHeight;
+            _split.SplitterDistance = Math.Clamp(
+                distance, MinPropertiesHeight, total - MinDescriptionHeight);
+            _initialSplitApplied = true;
+        }
+
+        private void SetDescription(string? text)
+        {
+            bool hasText = !string.IsNullOrWhiteSpace(text);
+            _descriptionBox.Font = new Font(
+                _theme.FontFamily, 9,
+                hasText ? FontStyle.Regular : FontStyle.Italic);
+            _descriptionBox.ForeColor = hasText ? _theme.Text : _theme.FooterText;
+            _descriptionBox.Text = hasText ? text! : PlaceholderText;
+            _descriptionBox.SelectionStart = 0;
+            _descriptionBox.SelectionLength = 0;
+            UpdateDescriptionScrollbars();
+        }
+
         public void ShowFor(NodeId? id)
         {
             _node = id;
             Rebuild();
         }
 
+        private void UpdateDescriptionScrollbars()
+        {
+            if (_updatingScrollbars) return;
+            ScrollBars desired = ScrollBars.None;
+            if (!string.IsNullOrEmpty(_descriptionBox.Text) &&
+                _descriptionBox.ClientSize.Width > 0 &&
+                _descriptionBox.ClientSize.Height > 0)
+            {
+                var measured = TextRenderer.MeasureText(
+                    _descriptionBox.Text,
+                    _descriptionBox.Font,
+                    new Size(_descriptionBox.ClientSize.Width, int.MaxValue),
+                    TextFormatFlags.WordBreak | TextFormatFlags.NoPadding);
+                if (measured.Height > _descriptionBox.ClientSize.Height)
+                    desired = ScrollBars.Vertical;
+            }
+            if (_descriptionBox.ScrollBars == desired) return;
+            try
+            {
+                _updatingScrollbars = true;
+                _descriptionBox.ScrollBars = desired;
+            }
+            finally { _updatingScrollbars = false; }
+        }
+
         private void BuildEmpty()
         {
-            Controls.Clear();
+            _scrollHost.Controls.Clear();
+            _scrollHost.AutoScrollPosition = Point.Empty;
             _editorsByProperty.Clear();
-            AutoScrollPosition = Point.Empty;
+            SetDescription(null);
 
             var empty = new Label
             {
@@ -61,14 +165,14 @@ namespace Metrician.Presentation.Graph
                 Padding = new Padding(10, 0, 10, 0),
                 Font = new Font(_theme.FontFamily, 9, FontStyle.Italic),
             };
-            Controls.Add(empty);
+            _scrollHost.Controls.Add(empty);
         }
 
         private void Rebuild()
         {
-            Controls.Clear();
+            _scrollHost.Controls.Clear();
+            _scrollHost.AutoScrollPosition = Point.Empty;
             _editorsByProperty.Clear();
-            AutoScrollPosition = Point.Empty;
 
             if (_node is not { } id)
             {
@@ -130,7 +234,9 @@ namespace Metrician.Presentation.Graph
                 _editorsByProperty[captured.Name] = editor;
             }
 
-            Controls.Add(grid);
+            _scrollHost.Controls.Add(grid);
+
+            SetDescription(node.Description);
         }
 
         private void AddRow(TableLayoutPanel grid, ref int row, string label, Control editor)
@@ -203,8 +309,6 @@ namespace Metrician.Presentation.Graph
             };
             return combo;
         }
-
-        private const string ColorEditorTag = "color-editor";
 
         private Button BuildColorEditor(object? value, Action<object?> commit)
         {
