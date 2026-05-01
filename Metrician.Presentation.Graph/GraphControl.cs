@@ -1,6 +1,7 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
+using System.ComponentModel;
 using System.Drawing.Drawing2D;
 using System.Numerics;
 using Metrician.Core.Graph;
@@ -17,6 +18,10 @@ namespace Metrician.Presentation.Graph
         public IList<INodeTemplate> AvailableTemplates { get; } = new List<INodeTemplate>();
         public IList<INodeTemplate> PinnedTemplates { get; } = new List<INodeTemplate>();
         public IDictionary<Keys, INodeTemplate> KeyShortcuts { get; } = new Dictionary<Keys, INodeTemplate>();
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IGraphScriptCommands? ScriptCommands { get; set; }
 
         private readonly GraphPainter _painter;
         private Vector2 _lastScreen;
@@ -196,6 +201,32 @@ namespace Metrician.Presentation.Graph
                 var reset = ThemedItem("Reset View");
                 reset.Click += (_, _) => Presenter.ResetView();
                 menu.Items.Add(reset);
+
+                var clear = ThemedItem("Clear Graph");
+                clear.Click += (_, _) =>
+                {
+                    foreach (var node in World.Nodes.All.ToList())
+                        World.Remove(node.Id);
+                };
+                menu.Items.Add(clear);
+
+                if (ScriptCommands is { } commands)
+                {
+                    menu.Items.Add(new ToolStripSeparator());
+
+                    var save = ThemedItem("Save Graph");
+                    save.Click += (_, _) => commands.Save();
+                    menu.Items.Add(save);
+
+                    var load = ThemedItem("Load Graph");
+                    load.Click += (_, _) => commands.LoadReplace();
+                    menu.Items.Add(load);
+
+                    var anchor = canvas;
+                    var append = ThemedItem("Append Graph");
+                    append.Click += (_, _) => commands.LoadAppend(anchor);
+                    menu.Items.Add(append);
+                }
             }
             return menu;
         }

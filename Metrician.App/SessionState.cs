@@ -5,6 +5,7 @@ using System.Numerics;
 using Metrician.Bridge;
 using Metrician.Core;
 using Metrician.Core.Graph;
+using Metrician.Core.ScriptBinding;
 using Metrician.Presentation.Graph;
 using Metrician.Renderable.Contracts;
 using Metrician.SampleNodes;
@@ -19,16 +20,27 @@ namespace Metrician.App
         public RenderableRegistry Renderables { get; } = new();
         public RenderSink RenderSink { get; }
 
+        private readonly NodeTemplateRegistry _templates = new();
+        private readonly TemplateNameSystem _templateNames;
+
         public SessionState()
         {
             Renderables.Register(new Vector3PointFactory());
             Renderables.Register(new SphereSpecFactory());
 
             RenderSink = new RenderSink(World);
+            _templateNames = new TemplateNameSystem(World.Nodes);
 
             GraphControl = new GraphControl(World) { Dock = DockStyle.Fill };
 
             var renderTemplate = new RenderNodeTemplate(Renderables, RenderSink.Publish);
+
+            _templates.Register(nameof(NominalPointNodeTemplate), () => new NominalPointNodeTemplate());
+            _templates.Register(nameof(PointStreamNodeTemplate), () => new PointStreamNodeTemplate());
+            _templates.Register(nameof(MeanPointodeTemplate), () => new MeanPointodeTemplate());
+            _templates.Register(nameof(PointDistanceNodeTemplate), () => new PointDistanceNodeTemplate());
+            _templates.Register(nameof(ToleranceCheckNodeTemplate), () => new ToleranceCheckNodeTemplate());
+            _templates.Register(nameof(RenderNodeTemplate), () => new RenderNodeTemplate(Renderables, RenderSink.Publish));
 
             // TODO: Pluginise these.
             GraphControl.AvailableTemplates.Add(new NominalPointNodeTemplate());
@@ -39,15 +51,28 @@ namespace Metrician.App
             GraphControl.PinnedTemplates.Add(renderTemplate);
             GraphControl.KeyShortcuts[Keys.R] = renderTemplate;
 
+            GraphControl.Presenter.NodeSpawned += (_, e) =>
+                _templateNames.Set(e.Id, e.Template.GetType().Name);
+
+            GraphControl.ScriptCommands = new GraphScriptCommands(
+                World, _templates, _templateNames, GraphControl);
+
             SeedDemoGraph(renderTemplate);
+        }
+
+        private NodeId AddSeed(string typeName, INodeTemplate template)
+        {
+            var id = World.Add(template);
+            _templateNames.Set(id, typeName);
+            return id;
         }
 
         private void SeedDemoGraph(RenderNodeTemplate renderTemplate)
         {
-            var nominal = World.Add(new NominalPointNodeTemplate());
-            var probe = World.Add(new PointStreamNodeTemplate());
-            var render = World.Add(renderTemplate);
-            var distance = World.Add(new PointDistanceNodeTemplate());
+            var nominal  = AddSeed(nameof(NominalPointNodeTemplate),  new NominalPointNodeTemplate());
+            var probe    = AddSeed(nameof(PointStreamNodeTemplate),   new PointStreamNodeTemplate());
+            var render   = AddSeed(nameof(RenderNodeTemplate),        renderTemplate);
+            var distance = AddSeed(nameof(PointDistanceNodeTemplate), new PointDistanceNodeTemplate());
 
             World.Layout.Set(nominal,  new Vector2(60, 60));
             World.Layout.Set(probe,    new Vector2(60, 240));

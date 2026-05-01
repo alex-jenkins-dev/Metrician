@@ -187,12 +187,15 @@ namespace Metrician.Model.Graph
             Raise();
         }
 
+        public event EventHandler<(NodeId Id, INodeTemplate Template)>? NodeSpawned;
+
         public NodeId Spawn(INodeTemplate template, Vector2 canvasAt)
         {
             if (template is null) throw new ArgumentNullException(nameof(template));
             var id = _world.Add(template);
             _world.Layout.Set(id, canvasAt);
             Select(id);
+            NodeSpawned?.Invoke(this, (id, template));
             return id;
         }
 
