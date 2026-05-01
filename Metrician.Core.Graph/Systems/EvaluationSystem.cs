@@ -32,6 +32,7 @@ namespace Metrician.Core.Graph
         private readonly IValueSystem _values;
         private readonly INodeErrorSystem _errors;
         private readonly INodeStatusSystem _status;
+        private readonly IValueConverterRegistry _converters;
         private readonly Dictionary<NodeId, Evaluator> _evaluators = new();
 
         public EvaluationSystem(
@@ -39,13 +40,15 @@ namespace Metrician.Core.Graph
             IWireSystem wires,
             IValueSystem values,
             INodeErrorSystem errors,
-            INodeStatusSystem status)
+            INodeStatusSystem status,
+            IValueConverterRegistry converters)
         {
             _pins = pins;
             _wires = wires;
             _values = values;
             _errors = errors;
             _status = status;
+            _converters = converters;
         }
 
         public event EventHandler<NodeId>? EvaluatorChanged;
@@ -91,7 +94,7 @@ namespace Metrician.Core.Graph
                 }
 
                 _errors.Clear(node);
-                evaluator(new EvaluationContext(node, _wires, _values, _errors));
+                evaluator(new EvaluationContext(node, _wires, _values, _errors, _converters));
 
                 if (_errors.Get(node).Count > 0)
                 {
@@ -156,15 +159,22 @@ namespace Metrician.Core.Graph
             private readonly IWireSystem _wires;
             private readonly IValueSystem _values;
             private readonly INodeErrorSystem _errors;
+            private readonly IValueConverterRegistry _converters;
 
             public NodeId Self { get; }
 
-            public EvaluationContext(NodeId self, IWireSystem wires, IValueSystem values, INodeErrorSystem errors)
+            public EvaluationContext(
+                NodeId self,
+                IWireSystem wires,
+                IValueSystem values,
+                INodeErrorSystem errors,
+                IValueConverterRegistry converters)
             {
                 Self = self;
                 _wires = wires;
                 _values = values;
                 _errors = errors;
+                _converters = converters;
             }
 
             public T? Read<T>(string inputName)
@@ -173,7 +183,11 @@ namespace Metrician.Core.Graph
                 var src = _wires.SourceOf(pin);
                 if (src is null) return default;
                 var raw = _values.Get(src.Value);
-                return raw is T t ? t : default;
+                if (raw is null) return default;
+                if (raw is T t) return t;
+                if (_converters.TryGet(raw.GetType(), typeof(T), out var convert) && convert is not null
+                    && convert(raw) is T tc) return tc;
+                return default;
             }
 
             public void Write<T>(string outputName, T value) =>

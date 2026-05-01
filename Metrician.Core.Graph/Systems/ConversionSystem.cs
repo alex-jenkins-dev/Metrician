@@ -19,6 +19,12 @@ namespace Metrician.Core.Graph
 
         public event EventHandler<PinId>? Changed;
 
+        public ConversionSystem(IWireSystem wires)
+        {
+            if (wires is null) throw new ArgumentNullException(nameof(wires));
+            wires.Disconnected += (_, w) => Clear(w.Target);
+        }
+
         public void Mark(PinId target)
         {
             if (_converted.Add(target))

@@ -17,6 +17,8 @@ namespace Metrician.Core.Graph
         ITagSystem Tags { get; }
         ILayoutSystem Layout { get; }
         IConversionSystem Conversions { get; }
+        IValueConverterRegistry Converters { get; }
+        IPinConnector PinConnector { get; }
         INodeStatusSystem Status { get; }
         INodeErrorSystem Errors { get; }
         IPinConstraintSystem PinConstraints { get; }
@@ -49,6 +51,8 @@ namespace Metrician.Core.Graph
         public ITagSystem Tags { get; }
         public ILayoutSystem Layout { get; }
         public IConversionSystem Conversions { get; }
+        public IValueConverterRegistry Converters { get; }
+        public IPinConnector PinConnector { get; }
         public INodeStatusSystem Status { get; }
         public INodeErrorSystem Errors { get; }
         public IPinConstraintSystem PinConstraints { get; }
@@ -66,11 +70,13 @@ namespace Metrician.Core.Graph
             Properties = AddBuiltin<IPropertySystem>(new PropertySystem());
             Errors = AddBuiltin<INodeErrorSystem>(new NodeErrorSystem());
             Status = AddBuiltin<INodeStatusSystem>(new NodeStatusSystem());
-            Evaluation = AddBuiltin<IEvaluationSystem>(new EvaluationSystem(Pins, Wires, Values, Errors, Status));
+            Converters = AddBuiltin<IValueConverterRegistry>(new ValueConverterRegistry());
+            Evaluation = AddBuiltin<IEvaluationSystem>(new EvaluationSystem(Pins, Wires, Values, Errors, Status, Converters));
             DynamicUpdates = AddBuiltin<IDynamicUpdateSystem>(new DynamicUpdateSystem());
             Tags = AddBuiltin<ITagSystem>(new TagSystem());
             Layout = AddBuiltin<ILayoutSystem>(new LayoutSystem());
-            Conversions = AddBuiltin<IConversionSystem>(new ConversionSystem());
+            Conversions = AddBuiltin<IConversionSystem>(new ConversionSystem(Wires));
+            PinConnector = AddBuiltin<IPinConnector>(new PinConnector(Pins, Wires, Converters, Conversions));
             PinConstraints = AddBuiltin<IPinConstraintSystem>(new PinConstraintSystem(Pins));
             PropertyConstraints = AddBuiltin<IPropertyConstraintSystem>(new PropertyConstraintSystem(Properties));
             Validation = AddBuiltin<IValidationSystem>(new ValidationSystem(

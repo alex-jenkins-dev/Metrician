@@ -132,15 +132,7 @@ namespace Metrician.Model.Graph
             {
                 var target = Geometry.InputPinAt(_world, canvas, m);
                 if (target is { } t)
-                {
-                    var srcPin = _world.Pins.Get(dw.Source);
-                    var tgtPin = _world.Pins.Get(t);
-                    if (srcPin is not null && tgtPin is not null &&
-                        tgtPin.ValueType.IsAssignableFrom(srcPin.ValueType))
-                    {
-                        _world.Wires.TryConnect(dw.Source, t);
-                    }
-                }
+                    _world.PinConnector.TryConnect(dw.Source, t);
             }
 
             _state = new InteractionState.Idle();

@@ -27,6 +27,9 @@ namespace Metrician.App
             Renderables.Register(new CylinderSpecFactory());
             Renderables.Register(new PlaneSpecFactory());
             Renderables.Register(new CircleSpecFactory());
+            Renderables.Register(new PointSpecFactory());
+
+            World.Converters.Register(new CircleToPointConverter());
 
             RenderSink = new RenderSink(World);
             _templateNames = new TemplateNameSystem(World.Nodes);
@@ -39,16 +42,18 @@ namespace Metrician.App
 
             var renderTemplate = new RenderNodeTemplate(Renderables, RenderSink.Publish);
 
-            _templates.Register(nameof(CylinderNodeTemplate),     () => new CylinderNodeTemplate());
-            _templates.Register(nameof(PlaneNodeTemplate),        () => new PlaneNodeTemplate());
-            _templates.Register(nameof(CircleNodeTemplate),       () => new CircleNodeTemplate());
-            _templates.Register(nameof(IntersectionNodeTemplate), () => new IntersectionNodeTemplate());
-            _templates.Register(nameof(RenderNodeTemplate),       () => new RenderNodeTemplate(Renderables, RenderSink.Publish));
+            _templates.Register(nameof(CylinderNodeTemplate),       () => new CylinderNodeTemplate());
+            _templates.Register(nameof(PlaneNodeTemplate),          () => new PlaneNodeTemplate());
+            _templates.Register(nameof(CircleNodeTemplate),         () => new CircleNodeTemplate());
+            _templates.Register(nameof(IntersectionNodeTemplate),   () => new IntersectionNodeTemplate());
+            _templates.Register(nameof(LabelledPointNodeTemplate),  () => new LabelledPointNodeTemplate());
+            _templates.Register(nameof(RenderNodeTemplate),         () => new RenderNodeTemplate(Renderables, RenderSink.Publish));
 
             GraphControl.AvailableTemplates.Add(new CylinderNodeTemplate());
             GraphControl.AvailableTemplates.Add(new PlaneNodeTemplate());
             GraphControl.AvailableTemplates.Add(new CircleNodeTemplate());
             GraphControl.AvailableTemplates.Add(new IntersectionNodeTemplate());
+            GraphControl.AvailableTemplates.Add(new LabelledPointNodeTemplate());
             GraphControl.PinnedTemplates.Add(renderTemplate);
             GraphControl.KeyShortcuts[Keys.R] = renderTemplate;
 
