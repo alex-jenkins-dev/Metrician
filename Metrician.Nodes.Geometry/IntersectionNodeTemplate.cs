@@ -25,8 +25,8 @@ namespace Metrician.Nodes.Geometry
             var cylinderPin = a.Pins.AddInput<CylinderSpec>("cylinder");
             a.Pins.AddOutput<CircleSpec>("circle");
 
-            a.Pins.Constrain(planePin.Id, c => c ? null : "plane must be wired");
-            a.Pins.Constrain(cylinderPin.Id, c => c ? null : "cylinder must be wired");
+            a.Pins.Constrain(planePin.Id, c => c ? null : "must be wired");
+            a.Pins.Constrain(cylinderPin.Id, c => c ? null : "must be wired");
 
             a.Behaviour.OnEvaluate(ctx =>
             {
@@ -34,21 +34,16 @@ namespace Metrician.Nodes.Geometry
                 var cylinder = ctx.Read<CylinderSpec>("cylinder");
                 if (plane is null || cylinder is null) return;
 
-                var normal = plane.Normal;
-                var axis = cylinder.Axis;
-                if (normal.LengthSquared() < 1e-12f || axis.LengthSquared() < 1e-12f)
-                {
-                    ctx.Error("plane normal and cylinder axis must be non-zero");
-                    return;
-                }
-                normal = Vector3.Normalize(normal);
-                axis = Vector3.Normalize(axis);
+                var normal = Vector3.Normalize(plane.Normal);
+                var axis = Vector3.Normalize(cylinder.Axis);
+
+                bool ok = true;
 
                 float alignment = MathF.Abs(Vector3.Dot(normal, axis));
                 if (alignment < PerpendicularityTolerance)
                 {
                     ctx.Error("plane is not perpendicular to the cylinder's axis");
-                    return;
+                    ok = false;
                 }
 
                 // Signed distance from the cylinder centre, along the axis,
@@ -57,8 +52,10 @@ namespace Metrician.Nodes.Geometry
                 if (MathF.Abs(t) > cylinder.Height * 0.5f)
                 {
                     ctx.Error("plane does not intersect the cylinder");
-                    return;
+                    ok = false;
                 }
+
+                if (!ok) return;
 
                 ctx.Write("circle", new CircleSpec(
                     cylinder.Center + axis * t,

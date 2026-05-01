@@ -65,12 +65,12 @@ namespace Metrician.Core.Graph
             Values = AddBuiltin<IValueSystem>(new ValueSystem());
             Properties = AddBuiltin<IPropertySystem>(new PropertySystem());
             Errors = AddBuiltin<INodeErrorSystem>(new NodeErrorSystem());
-            Evaluation = AddBuiltin<IEvaluationSystem>(new EvaluationSystem(Pins, Wires, Values, Errors));
+            Status = AddBuiltin<INodeStatusSystem>(new NodeStatusSystem());
+            Evaluation = AddBuiltin<IEvaluationSystem>(new EvaluationSystem(Pins, Wires, Values, Errors, Status));
             DynamicUpdates = AddBuiltin<IDynamicUpdateSystem>(new DynamicUpdateSystem());
             Tags = AddBuiltin<ITagSystem>(new TagSystem());
             Layout = AddBuiltin<ILayoutSystem>(new LayoutSystem());
             Conversions = AddBuiltin<IConversionSystem>(new ConversionSystem());
-            Status = AddBuiltin<INodeStatusSystem>(new NodeStatusSystem());
             PinConstraints = AddBuiltin<IPinConstraintSystem>(new PinConstraintSystem(Pins));
             PropertyConstraints = AddBuiltin<IPropertyConstraintSystem>(new PropertyConstraintSystem(Properties));
             Validation = AddBuiltin<IValidationSystem>(new ValidationSystem(

@@ -3,7 +3,7 @@
 
 namespace Metrician.Core.Graph
 {
-    public enum NodeReadiness { IllDefined, Ready }
+    public enum NodeReadiness { NotReady, Ready }
 
     public sealed record NodeStatus(NodeReadiness Readiness, IReadOnlyList<string> Reasons);
 
@@ -24,9 +24,14 @@ namespace Metrician.Core.Graph
 
         public void Set(NodeId id, NodeStatus status)
         {
+            if (_statuses.TryGetValue(id, out var existing) && StatusEqual(existing, status))
+                return;
             _statuses[id] = status;
             Changed?.Invoke(this, id);
         }
+
+        private static bool StatusEqual(NodeStatus a, NodeStatus b) =>
+            a.Readiness == b.Readiness && a.Reasons.SequenceEqual(b.Reasons);
 
         public NodeStatus? Get(NodeId id) =>
             _statuses.TryGetValue(id, out var s) ? s : null;

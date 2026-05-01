@@ -55,6 +55,14 @@ namespace Metrician.Core.Graph
                 Revalidate(w.Source.Owner);
                 Revalidate(w.Target.Owner);
             };
+            _status.Changed += (_, id) =>
+            {
+                foreach (var wire in _wires.All)
+                {
+                    if (wire.Source.Owner == id)
+                        Revalidate(wire.Target.Owner);
+                }
+            };
         }
 
         public void SetHolisticValidator(NodeId id, Func<IReadOnlyList<string>> validator)
@@ -91,6 +99,16 @@ namespace Metrician.Core.Graph
                     reasons.Add($"{pin.Id.Name}: {msg}");
             }
 
+            // Cascade: if any input's source is not ready, neither is this node.
+            foreach (var pin in _pins.Inputs(id))
+            {
+                var src = _wires.SourceOf(pin.Id);
+                if (src is null) continue;
+                var srcStatus = _status.Get(src.Value.Owner);
+                if (srcStatus?.Readiness == NodeReadiness.NotReady)
+                    reasons.Add($"{pin.Id.Name}: upstream not ready");
+            }
+
             if (_holistic.TryGetValue(id, out var holistic))
             {
                 try { reasons.AddRange(holistic()); }
@@ -98,7 +116,7 @@ namespace Metrician.Core.Graph
             }
 
             _status.Set(id, new NodeStatus(
-                reasons.Count == 0 ? NodeReadiness.Ready : NodeReadiness.IllDefined,
+                reasons.Count == 0 ? NodeReadiness.Ready : NodeReadiness.NotReady,
                 reasons));
 
             Revalidated?.Invoke(this, id);

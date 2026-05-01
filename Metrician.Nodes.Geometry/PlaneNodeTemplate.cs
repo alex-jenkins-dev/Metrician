@@ -24,17 +24,21 @@ namespace Metrician.Nodes.Geometry
             a.Properties.Define("Height", 2f);
             a.Properties.Define("Colour", Color.Khaki);
 
+            a.Properties.Constrain("Normal", v =>
+                v is Vector3 vec && vec.LengthSquared() >= 1e-12f
+                    ? null : "must be non-zero");
+            a.Properties.Constrain("Width", v =>
+                v is float w && w > 0f
+                    ? null : "must be greater than zero");
+            a.Properties.Constrain("Height", v =>
+                v is float h && h > 0f
+                    ? null : "must be greater than zero");
+
             a.Behaviour.OnEvaluate(ctx =>
             {
-                var normal = a.Properties.Get<Vector3>("Normal");
-                if (normal.LengthSquared() < 1e-12f)
-                {
-                    ctx.Error("normal must be non-zero");
-                    return;
-                }
                 ctx.Write("plane", new PlaneSpec(
                     a.Properties.Get<Vector3>("Center"),
-                    Vector3.Normalize(normal),
+                    Vector3.Normalize(a.Properties.Get<Vector3>("Normal")),
                     a.Properties.Get<float>("Width"),
                     a.Properties.Get<float>("Height"),
                     a.Properties.Get<Color>("Colour")));

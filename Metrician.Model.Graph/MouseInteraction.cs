@@ -282,9 +282,22 @@ namespace Metrician.Model.Graph
 
         private string ResolveStatus(NodeId id)
         {
-            if (_world.Errors.Get(id).Count > 0) return "Error";
+            var errors = _world.Errors.Get(id);
+            if (errors.Count > 0)
+            {
+                var lines = errors.Select(e =>
+                    "• " + (string.Equals(e.Message, "upstream evaluation failed", StringComparison.Ordinal)
+                        ? "An upstream node is in error"
+                        : e.Message));
+                return string.Join(Environment.NewLine, lines);
+            }
             var status = _world.Status.Get(id);
             if (status?.Readiness == NodeReadiness.Ready) return "Ready";
+            if (status?.Reasons is { Count: > 0 } reasons)
+            {
+                var lines = reasons.Select(r => "• " + r);
+                return string.Join(Environment.NewLine, lines);
+            }
             return "Not Ready";
         }
 

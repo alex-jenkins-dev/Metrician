@@ -31,18 +31,21 @@ namespace Metrician.Core.Graph
         private readonly IWireSystem _wires;
         private readonly IValueSystem _values;
         private readonly INodeErrorSystem _errors;
+        private readonly INodeStatusSystem _status;
         private readonly Dictionary<NodeId, Evaluator> _evaluators = new();
 
         public EvaluationSystem(
             IPinSystem pins,
             IWireSystem wires,
             IValueSystem values,
-            INodeErrorSystem errors)
+            INodeErrorSystem errors,
+            INodeStatusSystem status)
         {
             _pins = pins;
             _wires = wires;
             _values = values;
             _errors = errors;
+            _status = status;
         }
 
         public event EventHandler<NodeId>? EvaluatorChanged;
@@ -69,6 +72,14 @@ namespace Metrician.Core.Graph
             foreach (var node in TopologicalOrder())
             {
                 if (!_evaluators.TryGetValue(node, out var evaluator)) continue;
+
+                if (_status.Get(node) is { Readiness: NodeReadiness.NotReady })
+                {
+                    _errors.Clear(node);
+                    ClearOutputs(node);
+                    failed.Add(node);
+                    continue;
+                }
 
                 if (HasFailedUpstream(node, failed))
                 {

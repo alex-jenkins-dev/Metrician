@@ -22,17 +22,18 @@ namespace Metrician.Nodes.Geometry
             a.Properties.Define("Radius", 1f);
             a.Properties.Define("Colour", Color.LimeGreen);
 
+            a.Properties.Constrain("Normal", v =>
+                v is Vector3 vec && vec.LengthSquared() >= 1e-12f
+                    ? null : "must be non-zero");
+            a.Properties.Constrain("Radius", v =>
+                v is float r && r > 0f
+                    ? null : "must be greater than zero");
+
             a.Behaviour.OnEvaluate(ctx =>
             {
-                var normal = a.Properties.Get<Vector3>("Normal");
-                if (normal.LengthSquared() < 1e-12f)
-                {
-                    ctx.Error("normal must be non-zero");
-                    return;
-                }
                 ctx.Write("circle", new CircleSpec(
                     a.Properties.Get<Vector3>("Center"),
-                    Vector3.Normalize(normal),
+                    Vector3.Normalize(a.Properties.Get<Vector3>("Normal")),
                     a.Properties.Get<float>("Radius"),
                     a.Properties.Get<Color>("Colour")));
             });

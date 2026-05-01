@@ -15,7 +15,7 @@ namespace Metrician.Presentation.Graph
         private const int DefaultDescriptionHeight = 120;
         private const int MinPropertiesHeight = 60;
         private const int MinDescriptionHeight = 40;
-        private const string PlaceholderText = "(no description)";
+        private const string PlaceholderText = "No description";
 
         private readonly IGraphWorld _world;
         private readonly GraphTheme _theme;

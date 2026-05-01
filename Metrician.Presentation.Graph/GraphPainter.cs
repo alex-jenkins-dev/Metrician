@@ -131,6 +131,7 @@ namespace Metrician.Presentation.Graph
 
         private Color ResolvePinColour(IGraphWorld world, PinId pin)
         {
+            if (world.Errors.Get(pin.Owner).Count > 0) return _theme.StatusError;
             var c = world.PinColours.Get(pin);
             if (c is { } pc) return Color.FromArgb(pc.A, pc.R, pc.G, pc.B);
             return _theme.PinConnected;
