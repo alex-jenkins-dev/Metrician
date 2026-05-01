@@ -36,6 +36,7 @@ namespace Metrician.Viewport
         private readonly ToolStripButton _lockOrbitBtn;
         private readonly ToolStripButton _lockPanBtn;
         private readonly ToolStripButton _lockZoomBtn;
+        private readonly ToolStripButton _rotationCentreBtn;
         private readonly ToolStripButton _resetBtn;
         private readonly ToolStripButton _fitBtn;
         private readonly ToolStripButton _maximiseBtn;
@@ -132,6 +133,24 @@ namespace Metrician.Viewport
             _toolbar.Items.Add(_lockOrbitBtn);
             _toolbar.Items.Add(_lockPanBtn);
             _toolbar.Items.Add(_lockZoomBtn);
+
+            _rotationCentreBtn = new ToolStripButton("⊙")
+            {
+                CheckOnClick = true,
+                Checked = true,
+                ForeColor = Color.FromArgb(200, 200, 200),
+                AutoSize = true,
+            };
+            UpdateRotationCentreTooltip();
+            _rotationCentreBtn.Click += (_, _) =>
+            {
+                Viewport.MouseInteraction.RotationCenter = _rotationCentreBtn.Checked
+                    ? RotationCenterMode.Centre
+                    : RotationCenterMode.Eye;
+                UpdateRotationCentreTooltip();
+            };
+            _toolbar.Items.Add(_rotationCentreBtn);
+
             _toolbar.Items.Add(new ToolStripSeparator());
 
             _resetBtn = new ToolStripButton("↺")
@@ -192,6 +211,13 @@ namespace Metrician.Viewport
             Controls.Add(_toolbar);
 
             Paint += OnPanePaint;
+        }
+
+        private void UpdateRotationCentreTooltip()
+        {
+            _rotationCentreBtn.ToolTipText = _rotationCentreBtn.Checked
+                ? "Rotating around origin"
+                : "Rotating around focal plane";
         }
 
         public void SetMaximised(bool maximised)

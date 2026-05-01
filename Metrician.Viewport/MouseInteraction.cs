@@ -6,6 +6,19 @@ using Metrician.Rendering;
 
 namespace Metrician.Viewport
 {
+    public enum RotationCenterMode
+    {
+        /// <summary>
+        /// Orbit pivots the world origin; Target is snapped to (0,0,0) on each orbit.
+        /// </summary>
+        Centre,
+
+        /// <summary>
+        /// Orbit pivots whatever the camera is currently focused on (the focal plane).
+        /// </summary>
+        Eye,
+    }
+
     /// <summary>
     /// Mouse/keyboard binding from a <see cref="Control"/> to a <see cref="Camera3D"/>:
     /// orbit (left drag), pan (right drag or Alt+left), box-zoom (middle drag),
@@ -52,6 +65,8 @@ namespace Metrician.Viewport
         public bool LockPan { get; set; } = false;
         public bool LockZoom { get; set; } = false;
         public bool LockBoxZoom { get; set; } = false;
+
+        public RotationCenterMode RotationCenter { get; set; } = RotationCenterMode.Centre;
 
         public bool IsBoxZooming => _isBoxZooming;
 
@@ -129,9 +144,12 @@ namespace Metrician.Viewport
 
             if (_isOrbiting)
             {
-                _camera.Orbit(
-                    deltaAzimuth: -dx * OrbitSensitivity,
-                    deltaElevation: dy * OrbitSensitivity);
+                float dAz = -dx * OrbitSensitivity;
+                float dEl = dy * OrbitSensitivity;
+                if (RotationCenter == RotationCenterMode.Centre)
+                    _camera.OrbitAround(Vector3.Zero, dAz, dEl);
+                else
+                    _camera.Orbit(dAz, dEl);
             }
             else if (_isPanning && _panVpWidth > 0 && _panVpHeight > 0)
             {

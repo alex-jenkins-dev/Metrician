@@ -93,6 +93,40 @@ namespace Metrician.Rendering
             Elevation = Math.Clamp(Elevation + deltaElevation, MinElevation, MaxElevation);
         }
 
+        /// <summary>
+        /// Orbits the whole camera frame about an arbitrary world-space pivot.
+        /// Both Eye and Target rotate rigidly around <paramref name="pivot"/>, so
+        /// the eye-to-target offset (Distance and look direction) is preserved
+        /// and any prior pan stays intact.
+        /// </summary>
+        public void OrbitAround(Vector3 pivot, float deltaAzimuth, float deltaElevation)
+        {
+            float oldEl = Elevation;
+            float newEl = Math.Clamp(oldEl + deltaElevation, MinElevation, MaxElevation);
+            float clampedDeltaEl = newEl - oldEl;
+
+            var oldEye = Eye;
+            var oldTarget = Target;
+
+            var azRot = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, deltaAzimuth);
+
+            // Camera-right axis after the azimuth rotation. atan2-style fallback
+            // when the view is straight up/down so cross(viewDir, Z) doesn't vanish.
+            var view = oldEye - oldTarget;
+            var oldRight = Vector3.Cross(view, Vector3.UnitZ);
+            if (oldRight.LengthSquared() < 1e-12f)
+                oldRight = Vector3.UnitX;
+            oldRight = Vector3.Normalize(oldRight);
+            var newRight = Vector3.Transform(oldRight, azRot);
+
+            var elRot = Quaternion.CreateFromAxisAngle(newRight, clampedDeltaEl);
+            var rotation = elRot * azRot;
+
+            Target = pivot + Vector3.Transform(oldTarget - pivot, rotation);
+            Azimuth = (Azimuth + deltaAzimuth) % (2f * MathF.PI);
+            Elevation = newEl;
+        }
+
         /// <summary>Scales Distance by <paramref name="factor"/>; &gt;1 zooms out, &lt;1 zooms in.</summary>
         public void Zoom(float factor)
         {
