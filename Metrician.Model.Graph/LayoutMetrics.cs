@@ -12,6 +12,7 @@ namespace Metrician.Model.Graph
         public int PinRadius { get; init; } = 5;
         public int HitRadius { get; init; } = 10;
         public int CornerRadius { get; init; } = 6;
+        public int IndicatorInset { get; init; } = 12;
 
         public static LayoutMetrics Default { get; } = new();
     }

@@ -57,6 +57,20 @@ namespace Metrician.Model.Graph
             return new Vector2(x, y);
         }
 
+        public static Vector2 StatusDotPosition(
+            IGraphWorld world, NodeId id, LayoutMetrics m)
+        {
+            var rect = NodeRect(world, id, m);
+            return new Vector2(rect.Left + m.IndicatorInset, rect.Top + m.HeaderHeight / 2f);
+        }
+
+        public static Vector2 DynamicDotPosition(
+            IGraphWorld world, NodeId id, LayoutMetrics m)
+        {
+            var rect = NodeRect(world, id, m);
+            return new Vector2(rect.Right - m.IndicatorInset, rect.Top + m.HeaderHeight / 2f);
+        }
+
         public static NodeId? NodeAt(
             IGraphWorld world, Vector2 canvasPt, LayoutMetrics m)
         {

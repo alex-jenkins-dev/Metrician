@@ -13,6 +13,7 @@ namespace Metrician.Presentation.Graph
     {
         public IGraphWorld World { get; }
         public GraphPresenter Presenter { get; }
+        public MouseInteraction Mouse { get; }
         public GraphTheme Theme { get; }
 
         public IList<INodeTemplate> AvailableTemplates { get; } = new List<INodeTemplate>();
@@ -24,7 +25,7 @@ namespace Metrician.Presentation.Graph
         public IGraphScriptCommands? ScriptCommands { get; set; }
 
         private readonly GraphPainter _painter;
-        private Vector2 _lastScreen;
+        private readonly DelayedToolTip _tooltip;
 
         public GraphControl(IGraphWorld world)
             : this(world, GraphTheme.Dark, LayoutMetrics.Default) { }
@@ -34,7 +35,9 @@ namespace Metrician.Presentation.Graph
             World = world ?? throw new ArgumentNullException(nameof(world));
             Theme = theme ?? throw new ArgumentNullException(nameof(theme));
             Presenter = new GraphPresenter(world, metrics);
+            Mouse = new MouseInteraction(world, Presenter);
             _painter = new GraphPainter(theme);
+            _tooltip = new DelayedToolTip(this);
 
             BackColor = theme.Background;
             SetStyle(
@@ -48,7 +51,8 @@ namespace Metrician.Presentation.Graph
             TabStop = true;
 
             Presenter.ViewChanged += (_, _) => Invalidate();
-            Presenter.ContextMenuRequested += OnContextMenuRequested;
+            Mouse.Changed += OnMouseChanged;
+            Mouse.ContextMenuRequested += OnContextMenuRequested;
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -62,7 +66,7 @@ namespace Metrician.Presentation.Graph
             {
                 g.TranslateTransform(Presenter.Pan.X, Presenter.Pan.Y);
                 g.ScaleTransform(Presenter.Zoom, Presenter.Zoom);
-                _painter.DrawAll(g, Presenter);
+                _painter.DrawAll(g, Presenter, Mouse.State);
             }
             finally
             {
@@ -74,53 +78,58 @@ namespace Metrician.Presentation.Graph
         {
             base.OnMouseDown(e);
             if (!Focused) Focus();
-            var screen = new Vector2(e.X, e.Y);
-            _lastScreen = screen;
-            switch (e.Button)
+            if (TryMapButton(e.Button, out var button))
             {
-                case MouseButtons.Left:
-                    Presenter.OnLeftDown(screen);
-                    Capture = true;
-                    break;
-                case MouseButtons.Right:
-                    Presenter.OnRightDown(screen);
-                    Capture = true;
-                    break;
+                Mouse.OnDown(button, new Vector2(e.X, e.Y));
+                Capture = true;
             }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            _lastScreen = new Vector2(e.X, e.Y);
-            Presenter.OnMove(_lastScreen);
-            Cursor = Presenter.State is InteractionState.Panning
-                ? Cursors.SizeAll
-                : Cursors.Default;
+            Mouse.OnMove(new Vector2(e.X, e.Y));
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
-            var screen = new Vector2(e.X, e.Y);
-            _lastScreen = screen;
-            switch (e.Button)
+            if (TryMapButton(e.Button, out var button))
             {
-                case MouseButtons.Left:
-                    Presenter.OnLeftUp(screen);
-                    Capture = false;
-                    break;
-                case MouseButtons.Right:
-                    Presenter.OnRightUp(screen);
-                    Capture = false;
-                    break;
+                Mouse.OnUp(button, new Vector2(e.X, e.Y));
+                Capture = false;
             }
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
-            Presenter.OnWheel(new Vector2(e.X, e.Y), e.Delta);
+            Mouse.OnWheel(new Vector2(e.X, e.Y), e.Delta);
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            Mouse.OnLeave();
+        }
+
+        private void OnMouseChanged(object? sender, EventArgs e)
+        {
+            Cursor = MapCursor(Mouse.Cursor);
+            UpdateTooltip();
+        }
+
+        private void UpdateTooltip()
+        {
+            _tooltip.Show(
+                Mouse.Tooltip,
+                new Point((int)Mouse.LastScreen.X + 14, (int)Mouse.LastScreen.Y + 18));
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) _tooltip.Dispose();
+            base.Dispose(disposing);
         }
 
         protected override bool IsInputKey(Keys keyData) =>
@@ -140,104 +149,60 @@ namespace Metrician.Presentation.Graph
             }
             if (KeyShortcuts.TryGetValue(e.KeyData, out var template))
             {
-                Presenter.Spawn(template, Presenter.ScreenToCanvas(_lastScreen));
+                Presenter.Spawn(template, Presenter.ScreenToCanvas(Mouse.LastScreen));
                 e.Handled = true;
             }
         }
 
+        private static bool TryMapButton(MouseButtons button, out MouseButton mapped)
+        {
+            switch (button)
+            {
+                case MouseButtons.Left:  mapped = MouseButton.Left;  return true;
+                case MouseButtons.Right: mapped = MouseButton.Right; return true;
+                default: mapped = default; return false;
+            }
+        }
+
+        private static Cursor MapCursor(CursorKind kind) =>
+            kind switch
+            {
+                CursorKind.Move => Cursors.SizeAll,
+                _ => Cursors.Default,
+            };
+
         private void OnContextMenuRequested(object? sender, Vector2 screen)
         {
-            var menu = BuildMenu(screen);
-            if (menu is not null)
-                menu.Show(this, new Point((int)screen.X, (int)screen.Y));
-        }
-
-        protected virtual ContextMenuStrip? BuildMenu(Vector2 screen)
-        {
-            var canvas = Presenter.ScreenToCanvas(screen);
-            var hit = Geometry.NodeAt(World, canvas, Presenter.Metrics);
+            var entries = GraphContextMenuBuilder.Build(
+                Presenter, screen,
+                (IReadOnlyList<INodeTemplate>)AvailableTemplates.ToList(),
+                (IReadOnlyList<INodeTemplate>)PinnedTemplates.ToList(),
+                ScriptCommands);
+            if (entries.Count == 0) return;
 
             var menu = NewThemedMenu();
-            if (hit is { } id)
-            {
-                var node = World.Nodes.Get(id);
-                if (node is null) return null;
-                var header = ThemedItem(node.Title);
-                header.Enabled = false;
-                menu.Items.Add(header);
-                menu.Items.Add(new ToolStripSeparator());
-                var del = ThemedItem("Delete");
-                del.Click += (_, _) => World.Remove(id);
-                menu.Items.Add(del);
-            }
-            else
-            {
-                if (AvailableTemplates.Count + PinnedTemplates.Count > 0)
-                {
-                    var add = ThemedItem("Add");
-                    var grouped = AvailableTemplates
-                        .GroupBy(t => string.IsNullOrEmpty(t.Vendor) ? "Other" : t.Vendor)
-                        .OrderBy(g => g.Key);
-
-                    foreach (var grouping in grouped)
-                    {
-                        var vendor = ThemedItem(grouping.Key);
-                        foreach (var template in grouping.OrderBy(t => t.Title))
-                            vendor.DropDownItems.Add(BuildSpawnItem(template, canvas));
-                        add.DropDownItems.Add(vendor);
-                    }
-
-                    if (PinnedTemplates.Count > 0)
-                    {
-                        if (add.DropDownItems.Count > 0)
-                            add.DropDownItems.Add(new ToolStripSeparator());
-                        foreach (var template in PinnedTemplates)
-                            add.DropDownItems.Add(BuildSpawnItem(template, canvas));
-                    }
-
-                    menu.Items.Add(add);
-                    menu.Items.Add(new ToolStripSeparator());
-                }
-                var reset = ThemedItem("Reset View");
-                reset.Click += (_, _) => Presenter.ResetView();
-                menu.Items.Add(reset);
-
-                var clear = ThemedItem("Clear Graph");
-                clear.Click += (_, _) =>
-                {
-                    foreach (var node in World.Nodes.All.ToList())
-                        World.Remove(node.Id);
-                };
-                menu.Items.Add(clear);
-
-                if (ScriptCommands is { } commands)
-                {
-                    menu.Items.Add(new ToolStripSeparator());
-
-                    var save = ThemedItem("Save Graph");
-                    save.Click += (_, _) => commands.Save();
-                    menu.Items.Add(save);
-
-                    var load = ThemedItem("Load Graph");
-                    load.Click += (_, _) => commands.LoadReplace();
-                    menu.Items.Add(load);
-
-                    var anchor = canvas;
-                    var append = ThemedItem("Append Graph");
-                    append.Click += (_, _) => commands.LoadAppend(anchor);
-                    menu.Items.Add(append);
-                }
-            }
-            return menu;
+            PopulateMenu(menu.Items, entries);
+            menu.Show(this, new Point((int)screen.X, (int)screen.Y));
         }
 
-        private ToolStripMenuItem BuildSpawnItem(INodeTemplate template, Vector2 canvasAt)
+        private void PopulateMenu(ToolStripItemCollection target, IReadOnlyList<ContextMenuItem> entries)
         {
-            var captured = template;
-            var pos = canvasAt;
-            var item = ThemedItem(captured.Title);
-            item.Click += (_, _) => Presenter.Spawn(captured, pos);
-            return item;
+            foreach (var entry in entries)
+            {
+                if (entry.IsSeparator)
+                {
+                    target.Add(new ToolStripSeparator());
+                    continue;
+                }
+
+                var item = ThemedItem(entry.Label);
+                item.Enabled = entry.Enabled;
+                if (entry.OnClick is { } click)
+                    item.Click += (_, _) => click();
+                if (entry.Children is { Count: > 0 } children)
+                    PopulateMenu(item.DropDownItems, children);
+                target.Add(item);
+            }
         }
 
         private ContextMenuStrip NewThemedMenu() => new ContextMenuStrip

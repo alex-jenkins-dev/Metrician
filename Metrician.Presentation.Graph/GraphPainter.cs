@@ -17,7 +17,7 @@ namespace Metrician.Presentation.Graph
             _theme = theme;
         }
 
-        public void DrawAll(Graphics g, GraphPresenter p)
+        public void DrawAll(Graphics g, GraphPresenter p, InteractionState interactionState)
         {
             var world = p.World;
             var m = p.Metrics;
@@ -31,7 +31,7 @@ namespace Metrician.Presentation.Graph
             foreach (var node in world.Nodes.All)
                 DrawNode(g, world, node, p, p.SelectedNode is { } sel && sel == node.Id);
 
-            if (p.State is InteractionState.DraggingWire dw)
+            if (interactionState is InteractionState.DraggingWire dw)
                 DrawWire(g,
                     Geometry.PinPosition(world, dw.Source, m),
                     dw.EndCanvas,
@@ -68,21 +68,20 @@ namespace Metrician.Presentation.Graph
             }
 
             const int dotRadius = 4;
-            int dotCy = rect.Y + m.HeaderHeight / 2;
 
+            var statusCenter = Geometry.StatusDotPosition(world, node.Id, m);
             var statusColour = ResolveStatusColour(world, node.Id);
-            int statusCx = rect.X + 12;
             using (var statusBrush = new SolidBrush(statusColour))
                 g.FillEllipse(statusBrush,
-                    statusCx - dotRadius, dotCy - dotRadius,
+                    statusCenter.X - dotRadius, statusCenter.Y - dotRadius,
                     dotRadius * 2, dotRadius * 2);
 
             if (world.DynamicUpdates.HasLifetime(node.Id))
             {
-                int dotCx = rect.Right - 12;
+                var dynCenter = Geometry.DynamicDotPosition(world, node.Id, m);
                 using var dotBrush = new SolidBrush(_theme.DynamicIndicator);
                 g.FillEllipse(dotBrush,
-                    dotCx - dotRadius, dotCy - dotRadius,
+                    dynCenter.X - dotRadius, dynCenter.Y - dotRadius,
                     dotRadius * 2, dotRadius * 2);
             }
 
@@ -93,8 +92,8 @@ namespace Metrician.Presentation.Graph
             {
                 var pos = Geometry.PinPosition(world, pin.Id, m);
                 bool wired = world.Wires.SourceOf(pin.Id) is not null;
-                var colour = ResolvePinColour(world, pin.Id, wired);
-                DrawPin(g, pos, colour, m.PinRadius);
+                var colour = ResolvePinColour(world, pin.Id);
+                DrawPin(g, pos, colour, m.PinRadius, filled: wired);
                 g.DrawString(pin.Id.Name, labelFont, labelBrush,
                     pos.X + m.PinRadius + 4, pos.Y - 7);
             }
@@ -102,8 +101,9 @@ namespace Metrician.Presentation.Graph
             foreach (var pin in world.Pins.Outputs(node.Id))
             {
                 var pos = Geometry.PinPosition(world, pin.Id, m);
-                var colour = ResolvePinColour(world, pin.Id, connected: true);
-                DrawPin(g, pos, colour, m.PinRadius);
+                bool connected = world.Wires.All.Any(w => w.Source == pin.Id);
+                var colour = ResolvePinColour(world, pin.Id);
+                DrawPin(g, pos, colour, m.PinRadius, filled: connected);
                 var sz = g.MeasureString(pin.Id.Name, labelFont);
                 g.DrawString(pin.Id.Name, labelFont, labelBrush,
                     pos.X - m.PinRadius - sz.Width - 4, pos.Y - 7);
@@ -126,17 +126,25 @@ namespace Metrician.Presentation.Graph
             return _theme.StatusNotReady;
         }
 
-        private Color ResolvePinColour(IGraphWorld world, PinId pin, bool connected)
+        private Color ResolvePinColour(IGraphWorld world, PinId pin)
         {
             var c = world.PinColours.Get(pin);
             if (c is { } pc) return Color.FromArgb(pc.A, pc.R, pc.G, pc.B);
-            return connected ? _theme.PinConnected : _theme.Pin;
+            return _theme.PinConnected;
         }
 
-        public static void DrawPin(Graphics g, Vector2 p, Color colour, int radius)
+        public static void DrawPin(Graphics g, Vector2 p, Color colour, int radius, bool filled = true)
         {
-            using var fill = new SolidBrush(colour);
-            g.FillEllipse(fill, p.X - radius, p.Y - radius, radius * 2, radius * 2);
+            if (filled)
+            {
+                using var fill = new SolidBrush(colour);
+                g.FillEllipse(fill, p.X - radius, p.Y - radius, radius * 2, radius * 2);
+            }
+            else
+            {
+                using var pen = new Pen(colour, 1.5f);
+                g.DrawEllipse(pen, p.X - radius, p.Y - radius, radius * 2, radius * 2);
+            }
         }
 
         public static void DrawWire(Graphics g, Vector2 a, Vector2 b, Color colour)

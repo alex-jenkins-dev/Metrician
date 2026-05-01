@@ -3,7 +3,7 @@
 
 using System.Numerics;
 
-namespace Metrician.Presentation.Graph
+namespace Metrician.Model.Graph
 {
     public interface IGraphScriptCommands
     {

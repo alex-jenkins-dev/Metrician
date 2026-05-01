@@ -5,7 +5,7 @@ using System.Numerics;
 using Metrician.Core.Graph;
 using Metrician.Core.Scripting;
 using Metrician.Core.ScriptBinding;
-using Metrician.Presentation.Graph;
+using Metrician.Model.Graph;
 
 namespace Metrician.App
 {
