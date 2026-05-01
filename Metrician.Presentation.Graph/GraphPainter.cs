@@ -96,7 +96,7 @@ namespace Metrician.Presentation.Graph
                 var pos = Geometry.PinPosition(world, pin.Id, m);
                 bool wired = world.Wires.SourceOf(pin.Id) is not null;
                 var colour = ResolvePinColour(world, pin.Id);
-                DrawPin(g, pos, colour, m.PinRadius, filled: wired);
+                DrawPin(g, pos, colour, m.PinRadius, filled: wired, hollowFill: _theme.PinHollowFill);
                 g.DrawString(pin.Id.Name, labelFont, labelBrush,
                     pos.X + m.PinRadius + 4, pos.Y - 7);
             }
@@ -106,7 +106,7 @@ namespace Metrician.Presentation.Graph
                 var pos = Geometry.PinPosition(world, pin.Id, m);
                 bool connected = world.Wires.All.Any(w => w.Source == pin.Id);
                 var colour = ResolvePinColour(world, pin.Id);
-                DrawPin(g, pos, colour, m.PinRadius, filled: connected);
+                DrawPin(g, pos, colour, m.PinRadius, filled: connected, hollowFill: _theme.PinHollowFill);
                 var sz = g.MeasureString(pin.Id.Name, labelFont);
                 g.DrawString(pin.Id.Name, labelFont, labelBrush,
                     pos.X - m.PinRadius - sz.Width - 4, pos.Y - 7);
@@ -136,17 +136,27 @@ namespace Metrician.Presentation.Graph
             return _theme.PinConnected;
         }
 
-        public static void DrawPin(Graphics g, Vector2 p, Color colour, int radius, bool filled = true)
+        public static void DrawPin(
+            Graphics g, Vector2 p, Color colour, int radius,
+            bool filled = true, Color? hollowFill = null)
         {
+            float x = p.X - radius;
+            float y = p.Y - radius;
+            float d = radius * 2;
             if (filled)
             {
                 using var fill = new SolidBrush(colour);
-                g.FillEllipse(fill, p.X - radius, p.Y - radius, radius * 2, radius * 2);
+                g.FillEllipse(fill, x, y, d, d);
             }
             else
             {
+                if (hollowFill is { } bg)
+                {
+                    using var fill = new SolidBrush(bg);
+                    g.FillEllipse(fill, x, y, d, d);
+                }
                 using var pen = new Pen(colour, 1.5f);
-                g.DrawEllipse(pen, p.X - radius, p.Y - radius, radius * 2, radius * 2);
+                g.DrawEllipse(pen, x, y, d, d);
             }
         }
 

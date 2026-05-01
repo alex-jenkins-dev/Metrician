@@ -16,6 +16,7 @@ namespace Metrician.Presentation.Graph
 
         public Color Pin              { get; init; } = Color.FromArgb(170, 170, 175);
         public Color PinConnected     { get; init; } = Color.FromArgb(100, 200, 255);
+        public Color PinHollowFill    { get; init; } = Color.FromArgb(60, 60, 66);
         public Color Wire             { get; init; } = Color.FromArgb(200, 130, 200, 255);
         public Color WireDrag         { get; init; } = Color.FromArgb(220, 255, 200, 100);
         public Color WireError        { get; init; } = Color.FromArgb(220, 220, 80, 80);
