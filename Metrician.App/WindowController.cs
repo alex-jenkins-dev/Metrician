@@ -49,7 +49,7 @@ namespace Metrician.App
             }
         }
 
-        public void Start() => RequestMode(DisplayMode.ThreeD);
+        public void Start() => RequestMode(DisplayMode.Both);
 
         public void RequestMode(DisplayMode requested)
         {
