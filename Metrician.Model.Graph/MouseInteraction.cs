@@ -22,6 +22,7 @@ namespace Metrician.Model.Graph
         private readonly GraphPresenter _presenter;
 
         private InteractionState _state = new InteractionState.Idle();
+        private InteractionState _lastNotifiedState = new InteractionState.Idle();
         private Vector2 _lastScreen;
         private NodeId? _hoveredNode;
         private IndicatorKind? _hoveredIndicator;
@@ -219,6 +220,11 @@ namespace Metrician.Model.Graph
         {
             var canvas = _presenter.ScreenToCanvas(_lastScreen);
             bool changed = false;
+            if (!Equals(_state, _lastNotifiedState))
+            {
+                _lastNotifiedState = _state;
+                changed = true;
+            }
             changed |= UpdateHover(canvas);
             changed |= UpdateCursor();
             changed |= UpdateTooltip();

@@ -117,6 +117,7 @@ namespace Metrician.Presentation.Graph
         {
             Cursor = MapCursor(Mouse.Cursor);
             UpdateTooltip();
+            Invalidate();
         }
 
         private void UpdateTooltip()

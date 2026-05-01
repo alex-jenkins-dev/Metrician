@@ -1,15 +1,13 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
-using System.Numerics;
 using Metrician.Bridge;
 using Metrician.Core;
 using Metrician.Core.Graph;
 using Metrician.Core.ScriptBinding;
+using Metrician.Nodes.Geometry;
 using Metrician.Presentation.Graph;
 using Metrician.Renderable.Contracts;
-using Metrician.SampleNodes;
-using Metrician.SampleNodes.Ecs;
 
 namespace Metrician.App
 {
@@ -26,8 +24,9 @@ namespace Metrician.App
 
         public SessionState()
         {
-            Renderables.Register(new Vector3PointFactory());
-            Renderables.Register(new SphereSpecFactory());
+            Renderables.Register(new CylinderSpecFactory());
+            Renderables.Register(new PlaneSpecFactory());
+            Renderables.Register(new CircleSpecFactory());
 
             RenderSink = new RenderSink(World);
             _templateNames = new TemplateNameSystem(World.Nodes);
@@ -40,19 +39,16 @@ namespace Metrician.App
 
             var renderTemplate = new RenderNodeTemplate(Renderables, RenderSink.Publish);
 
-            _templates.Register(nameof(NominalPointNodeTemplate), () => new NominalPointNodeTemplate());
-            _templates.Register(nameof(PointStreamNodeTemplate), () => new PointStreamNodeTemplate());
-            _templates.Register(nameof(MeanPointodeTemplate), () => new MeanPointodeTemplate());
-            _templates.Register(nameof(PointDistanceNodeTemplate), () => new PointDistanceNodeTemplate());
-            _templates.Register(nameof(ToleranceCheckNodeTemplate), () => new ToleranceCheckNodeTemplate());
-            _templates.Register(nameof(RenderNodeTemplate), () => new RenderNodeTemplate(Renderables, RenderSink.Publish));
+            _templates.Register(nameof(CylinderNodeTemplate),     () => new CylinderNodeTemplate());
+            _templates.Register(nameof(PlaneNodeTemplate),        () => new PlaneNodeTemplate());
+            _templates.Register(nameof(CircleNodeTemplate),       () => new CircleNodeTemplate());
+            _templates.Register(nameof(IntersectionNodeTemplate), () => new IntersectionNodeTemplate());
+            _templates.Register(nameof(RenderNodeTemplate),       () => new RenderNodeTemplate(Renderables, RenderSink.Publish));
 
-            // TODO: Pluginise these.
-            GraphControl.AvailableTemplates.Add(new NominalPointNodeTemplate());
-            GraphControl.AvailableTemplates.Add(new PointStreamNodeTemplate());
-            GraphControl.AvailableTemplates.Add(new MeanPointodeTemplate());
-            GraphControl.AvailableTemplates.Add(new PointDistanceNodeTemplate());
-            GraphControl.AvailableTemplates.Add(new ToleranceCheckNodeTemplate());
+            GraphControl.AvailableTemplates.Add(new CylinderNodeTemplate());
+            GraphControl.AvailableTemplates.Add(new PlaneNodeTemplate());
+            GraphControl.AvailableTemplates.Add(new CircleNodeTemplate());
+            GraphControl.AvailableTemplates.Add(new IntersectionNodeTemplate());
             GraphControl.PinnedTemplates.Add(renderTemplate);
             GraphControl.KeyShortcuts[Keys.R] = renderTemplate;
 
@@ -61,42 +57,6 @@ namespace Metrician.App
 
             GraphControl.ScriptCommands = new GraphScriptCommands(
                 World, _templates, _templateNames, GraphControl);
-
-            SeedDemoGraph(renderTemplate);
-        }
-
-        private NodeId AddSeed(string typeName, INodeTemplate template)
-        {
-            var id = World.Add(template);
-            _templateNames.Set(id, typeName);
-            return id;
-        }
-
-        private void SeedDemoGraph(RenderNodeTemplate renderTemplate)
-        {
-            var nominal  = AddSeed(nameof(NominalPointNodeTemplate),  new NominalPointNodeTemplate());
-            var probe    = AddSeed(nameof(PointStreamNodeTemplate),   new PointStreamNodeTemplate());
-            var render   = AddSeed(nameof(RenderNodeTemplate),        renderTemplate);
-            var distance = AddSeed(nameof(PointDistanceNodeTemplate), new PointDistanceNodeTemplate());
-
-            World.Layout.Set(nominal,  new Vector2(60, 60));
-            World.Layout.Set(probe,    new Vector2(60, 240));
-            World.Layout.Set(distance, new Vector2(320, 140));
-            World.Layout.Set(render,   new Vector2(320, 360));
-
-            World.Wires.TryConnect(
-                new PinId(nominal, "position", PinDirection.Output),
-                new PinId(distance, "feature a", PinDirection.Input));
-            World.Wires.TryConnect(
-                new PinId(probe, "sample", PinDirection.Output),
-                new PinId(distance, "feature b", PinDirection.Input));
-
-            World.Wires.TryConnect(
-                new PinId(probe, "sample", PinDirection.Output),
-                new PinId(render, "in 0", PinDirection.Input));
-            World.Wires.TryConnect(
-                new PinId(nominal, "position", PinDirection.Output),
-                new PinId(render, "in 1", PinDirection.Input));
         }
     }
 
@@ -106,9 +66,10 @@ namespace Metrician.App
 
         public RenderSink(IGraphWorld world)
         {
-            world.Nodes.Removed += (_, id) =>
+            world.Nodes.Removed += (_, id) => Remove(id);
+            world.Errors.Changed += (_, id) =>
             {
-                if (_byNode.Remove(id)) Changed?.Invoke(this, EventArgs.Empty);
+                if (world.Errors.Get(id).Count > 0) Remove(id);
             };
         }
 
@@ -125,6 +86,11 @@ namespace Metrician.App
             foreach (var list in _byNode.Values)
                 foreach (var r in list)
                     yield return r;
+        }
+
+        private void Remove(NodeId id)
+        {
+            if (_byNode.Remove(id)) Changed?.Invoke(this, EventArgs.Empty);
         }
     }
 }

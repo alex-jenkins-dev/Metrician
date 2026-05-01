@@ -18,13 +18,14 @@
     <ProjectReference Include="..\Metrician.Rendering\Metrician.Rendering.csproj" />
     <ProjectReference Include="..\Metrician.Renderables\Metrician.Renderables.csproj" />
     <ProjectReference Include="..\Metrician.Viewport\Metrician.Viewport.csproj" />
+    <ProjectReference Include="..\Metrician.Core\Metrician.Core.csproj" />
     <ProjectReference Include="..\Metrician.Core.Graph\Metrician.Core.Graph.csproj" />
     <ProjectReference Include="..\Metrician.Core.Scripting\Metrician.Core.Scripting.csproj" />
     <ProjectReference Include="..\Metrician.Core.ScriptBinding\Metrician.Core.ScriptBinding.csproj" />
     <ProjectReference Include="..\Metrician.Bridge\Metrician.Bridge.csproj" />
     <ProjectReference Include="..\Metrician.Model.Graph\Metrician.Model.Graph.csproj" />
     <ProjectReference Include="..\Metrician.Presentation.Graph\Metrician.Presentation.Graph.csproj" />
-    <ProjectReference Include="..\Metrician.SampleNodes\Metrician.SampleNodes.csproj" />
+    <ProjectReference Include="..\Metrician.Nodes.Geometry\Metrician.Nodes.Geometry.csproj" />
   </ItemGroup>
 
   <ItemGroup>

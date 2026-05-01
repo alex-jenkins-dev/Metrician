@@ -23,10 +23,13 @@ namespace Metrician.Presentation.Graph
             var m = p.Metrics;
 
             foreach (var wire in world.Wires.All)
+            {
+                bool sourceFailed = world.Errors.Get(wire.Source.Owner).Count > 0;
                 DrawWire(g,
                     Geometry.PinPosition(world, wire.Source, m),
                     Geometry.PinPosition(world, wire.Target, m),
-                    _theme.Wire);
+                    sourceFailed ? _theme.WireError : _theme.Wire);
+            }
 
             foreach (var node in world.Nodes.All)
                 DrawNode(g, world, node, p, p.SelectedNode is { } sel && sel == node.Id);
