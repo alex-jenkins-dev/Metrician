@@ -9,6 +9,5 @@ namespace Metrician.Nodes.Geometry
         Vector3 Center,
         Vector3 Axis,
         float Radius,
-        float Height,
-        Color Colour);
+        float Height);
 }

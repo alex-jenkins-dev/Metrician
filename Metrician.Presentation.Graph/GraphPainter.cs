@@ -91,12 +91,16 @@ namespace Metrician.Presentation.Graph
             using var labelBrush = new SolidBrush(_theme.Text);
             using var labelFont = new Font(_theme.FontFamily, 8f);
 
+            var selectedPin = p.SelectedPin;
+
             foreach (var pin in world.Pins.Inputs(node.Id))
             {
                 var pos = Geometry.PinPosition(world, pin.Id, m);
                 bool wired = world.Wires.SourceOf(pin.Id) is not null;
                 var colour = ResolvePinColour(world, pin.Id);
                 DrawPin(g, pos, colour, m.PinRadius, filled: wired, hollowFill: _theme.PinHollowFill);
+                if (selectedPin is { } sp && sp == pin.Id)
+                    DrawPinSelectionRing(g, pos, m.PinRadius);
                 g.DrawString(pin.Id.Name, labelFont, labelBrush,
                     pos.X + m.PinRadius + 4, pos.Y - 7);
             }
@@ -107,6 +111,8 @@ namespace Metrician.Presentation.Graph
                 bool connected = world.Wires.All.Any(w => w.Source == pin.Id);
                 var colour = ResolvePinColour(world, pin.Id);
                 DrawPin(g, pos, colour, m.PinRadius, filled: connected, hollowFill: _theme.PinHollowFill);
+                if (selectedPin is { } sp && sp == pin.Id)
+                    DrawPinSelectionRing(g, pos, m.PinRadius);
                 var sz = g.MeasureString(pin.Id.Name, labelFont);
                 g.DrawString(pin.Id.Name, labelFont, labelBrush,
                     pos.X - m.PinRadius - sz.Width - 4, pos.Y - 7);
@@ -135,6 +141,13 @@ namespace Metrician.Presentation.Graph
             var c = world.PinColours.Get(pin);
             if (c is { } pc) return Color.FromArgb(pc.A, pc.R, pc.G, pc.B);
             return _theme.PinConnected;
+        }
+
+        private void DrawPinSelectionRing(Graphics g, Vector2 p, int pinRadius)
+        {
+            float r = pinRadius + 3f;
+            using var pen = new Pen(_theme.SelectedBorder, 2f);
+            g.DrawEllipse(pen, p.X - r, p.Y - r, r * 2, r * 2);
         }
 
         public static void DrawPin(

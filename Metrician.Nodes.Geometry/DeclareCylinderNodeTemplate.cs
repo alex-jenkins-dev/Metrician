@@ -6,14 +6,14 @@ using Metrician.Core.Graph;
 
 namespace Metrician.Nodes.Geometry
 {
-    public sealed class CylinderNodeTemplate : INodeTemplate
+    public sealed class DeclareCylinderNodeTemplate : INodeTemplate
     {
-        public string Title => "Cylinder";
+        public string Title => "Declare Cylinder";
         public string Vendor => "Metrician";
         public string Description =>
             "A finite cylinder defined by its centre, axis direction, diameter, and height. " +
             "The axis is normalised; height extends symmetrically along it. " +
-            "Diameter and height must be greater than zero.";
+            "Diameter and height must be greater than zero. Declared into existence.";
 
         public void Configure(INodeAuthor a)
         {
@@ -23,7 +23,6 @@ namespace Metrician.Nodes.Geometry
             a.Properties.Define("Axis", Vector3.UnitZ);
             a.Properties.Define("Diameter", 2f);
             a.Properties.Define("Height", 2f);
-            a.Properties.Define("Colour", Color.LightSteelBlue);
 
             a.Properties.Constrain("Axis", v =>
                 v is Vector3 vec && vec.LengthSquared() >= 1e-12f
@@ -41,8 +40,7 @@ namespace Metrician.Nodes.Geometry
                     a.Properties.Get<Vector3>("Center"),
                     Vector3.Normalize(a.Properties.Get<Vector3>("Axis")),
                     a.Properties.Get<float>("Diameter") * 0.5f,
-                    a.Properties.Get<float>("Height"),
-                    a.Properties.Get<Color>("Colour")));
+                    a.Properties.Get<float>("Height")));
             });
 
             a.Tags.Add("geometry");

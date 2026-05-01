@@ -5,14 +5,15 @@ using Metrician.Core.Graph;
 
 namespace Metrician.Nodes.Geometry
 {
-    public sealed class LabelledPointNodeTemplate : INodeTemplate
+    public sealed class IntrinsicPointNodeTemplate : INodeTemplate
     {
-        public string Title => "Labelled Point";
+        public string Title => "Intrinsic Point";
         public string Vendor => "Metrician";
         public string Description =>
-            "Forwards a point onward as a PointSpec so a render node can draw it as " +
-            "a dot annotated with its world-space coordinates. Accepts a CircleSpec " +
-            "via the built-in CircleSpec → PointSpec converter.";
+            "Reduces any wired value to a point. Accepts a PointSpec directly, or any " +
+            "type for which a converter to PointSpec is registered (e.g. a circle's centre). " +
+            "Outputs the resulting PointSpec for downstream rendering. " +
+            "This is distinct from a constructor node that would declare a point into existence.";
 
         public void Configure(INodeAuthor a)
         {

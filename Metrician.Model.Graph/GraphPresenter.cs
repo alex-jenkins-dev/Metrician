@@ -13,7 +13,8 @@ namespace Metrician.Model.Graph
 
         private Vector2 _pan = Vector2.Zero;
         private float _zoom = 1f;
-        private NodeId? _selected;
+        private NodeId? _selectedNode;
+        private PinId? _selectedPin;
 
         public GraphPresenter(IGraphWorld world, LayoutMetrics? metrics = null)
         {
@@ -36,10 +37,12 @@ namespace Metrician.Model.Graph
         public LayoutMetrics Metrics => _metrics;
         public Vector2 Pan => _pan;
         public float Zoom => _zoom;
-        public NodeId? SelectedNode => _selected;
+        public NodeId? SelectedNode => _selectedNode;
+        public PinId? SelectedPin => _selectedPin;
 
         public event EventHandler? ViewChanged;
         public event EventHandler<NodeId?>? SelectionChanged;
+        public event EventHandler<PinId?>? PinSelectionChanged;
         public event EventHandler<(NodeId Id, INodeTemplate Template)>? NodeSpawned;
 
         public Vector2 ScreenToCanvas(Vector2 screen) =>
@@ -58,9 +61,22 @@ namespace Metrician.Model.Graph
 
         public void Select(NodeId? id)
         {
-            if (Nullable.Equals(_selected, id)) return;
-            _selected = id;
+            if (Nullable.Equals(_selectedNode, id)) return;
+            _selectedNode = id;
+            if (_selectedPin is not null)
+            {
+                _selectedPin = null;
+                PinSelectionChanged?.Invoke(this, null);
+            }
             SelectionChanged?.Invoke(this, id);
+            Raise();
+        }
+
+        public void SelectPin(PinId? pin)
+        {
+            if (Nullable.Equals(_selectedPin, pin)) return;
+            _selectedPin = pin;
+            PinSelectionChanged?.Invoke(this, pin);
             Raise();
         }
 
@@ -76,7 +92,7 @@ namespace Metrician.Model.Graph
 
         public bool DeleteSelected()
         {
-            if (_selected is not { } id) return false;
+            if (_selectedNode is not { } id) return false;
             Select(null);
             _world.Remove(id);
             return true;

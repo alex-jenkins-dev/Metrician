@@ -32,6 +32,7 @@ namespace Metrician.App
             world.Wires.Connected += (_, _) => Evaluate();
             world.Wires.Disconnected += (_, _) => Evaluate();
             world.Properties.Changed += (_, _) => Evaluate();
+            world.RenderOptions.Changed += (_, _) => Evaluate();
             world.DynamicUpdates.UpdateRequested += OnDynamicRefreshRequested;
             _session.RenderSink.Changed += (_, _) => RefreshViewport();
 

@@ -19,6 +19,7 @@ namespace Metrician.Core.Graph
         IConversionSystem Conversions { get; }
         IValueConverterRegistry Converters { get; }
         IPinConnector PinConnector { get; }
+        IRenderOptionsSystem RenderOptions { get; }
         INodeStatusSystem Status { get; }
         INodeErrorSystem Errors { get; }
         IPinConstraintSystem PinConstraints { get; }
@@ -53,6 +54,7 @@ namespace Metrician.Core.Graph
         public IConversionSystem Conversions { get; }
         public IValueConverterRegistry Converters { get; }
         public IPinConnector PinConnector { get; }
+        public IRenderOptionsSystem RenderOptions { get; }
         public INodeStatusSystem Status { get; }
         public INodeErrorSystem Errors { get; }
         public IPinConstraintSystem PinConstraints { get; }
@@ -77,6 +79,7 @@ namespace Metrician.Core.Graph
             Layout = AddBuiltin<ILayoutSystem>(new LayoutSystem());
             Conversions = AddBuiltin<IConversionSystem>(new ConversionSystem(Wires));
             PinConnector = AddBuiltin<IPinConnector>(new PinConnector(Pins, Wires, Converters, Conversions));
+            RenderOptions = AddBuiltin<IRenderOptionsSystem>(new RenderOptionsSystem(Wires));
             PinConstraints = AddBuiltin<IPinConstraintSystem>(new PinConstraintSystem(Pins));
             PropertyConstraints = AddBuiltin<IPropertyConstraintSystem>(new PropertyConstraintSystem(Properties));
             Validation = AddBuiltin<IValidationSystem>(new ValidationSystem(
@@ -123,6 +126,7 @@ namespace Metrician.Core.Graph
             Layout.Clear(id);
             Status.Clear(id);
             Errors.Clear(id);
+            RenderOptions.RemoveAllFor(id);
             Nodes.Remove(id);
         }
 

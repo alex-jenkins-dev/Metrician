@@ -6,6 +6,10 @@ namespace Metrician.Library.Renderables
     public interface IRenderableFactory<in T>
     {
         IRenderable Create(T value);
+
+        IRenderable Create(T value, object? options) => Create(value);
+
+        Type? OptionsType => null;
     }
 
     public interface IRenderableRegistry
@@ -13,5 +17,9 @@ namespace Metrician.Library.Renderables
         void Register<T>(IRenderableFactory<T> factory);
 
         bool TryCreate(object value, out IRenderable? renderable);
+
+        bool TryCreate(object value, object? options, out IRenderable? renderable);
+
+        bool TryGetOptionsType(Type dataType, out Type? optionsType);
     }
 }

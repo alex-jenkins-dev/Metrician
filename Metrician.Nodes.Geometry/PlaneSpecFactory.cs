@@ -8,13 +8,22 @@ namespace Metrician.Nodes.Geometry
 {
     public sealed class PlaneSpecFactory : IRenderableFactory<PlaneSpec>
     {
-        public IRenderable Create(PlaneSpec value) => new PlaneRenderable
+        public Type? OptionsType => typeof(PlaneRenderOptions);
+
+        public IRenderable Create(PlaneSpec value) => Create(value, null);
+
+        public IRenderable Create(PlaneSpec value, object? options)
         {
-            Center = value.Center,
-            Normal = value.Normal,
-            Width = value.Width,
-            Height = value.Height,
-            Style = new StrokeStyle { Colour = value.Colour, Width = 1.5f },
-        };
+            var opts = options as PlaneRenderOptions ?? new PlaneRenderOptions();
+            return new PlaneRenderable
+            {
+                Center = value.Center,
+                Normal = value.Normal,
+                Width = value.Width,
+                Height = value.Height,
+                Style = new StrokeStyle { Colour = opts.Colour, Width = opts.LineWidth },
+                ShowNormal = opts.ShowNormal,
+            };
+        }
     }
 }

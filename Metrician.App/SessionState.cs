@@ -27,6 +27,7 @@ namespace Metrician.App
         public SessionState()
         {
             RenderSink = new RenderSink(World);
+            World.Register<IRenderableRegistry>(Renderables);
             _templateNames = new TemplateNameSystem(World.Nodes);
 
             GraphControl = new GraphControl(World);
@@ -35,9 +36,13 @@ namespace Metrician.App
                 Dock = DockStyle.Fill,
             };
 
-            var renderTemplate = new RenderNodeTemplate(Renderables, RenderSink.Publish);
+            var renderTemplate = new RenderNodeTemplate(
+                Renderables, World.RenderOptions, RenderSink.Publish);
+
             _templates.Register(nameof(RenderNodeTemplate),
-                () => new RenderNodeTemplate(Renderables, RenderSink.Publish));
+                () => new RenderNodeTemplate(
+                    Renderables, World.RenderOptions, RenderSink.Publish));
+
             GraphControl.PinnedTemplates.Add(renderTemplate);
             GraphControl.KeyShortcuts[Keys.R] = renderTemplate;
 

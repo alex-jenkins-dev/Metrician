@@ -8,6 +8,6 @@ namespace Metrician.Nodes.Geometry
     public sealed class CircleToPointConverter : IValueConverter<CircleSpec, PointSpec>
     {
         public PointSpec Convert(CircleSpec value) =>
-            new(value.Center, value.Colour);
+            new(value.Center);
     }
 }

@@ -1,24 +1,26 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
-using System.Globalization;
 using Metrician.Library.Renderables;
 
 namespace Metrician.Nodes.Geometry
 {
     public sealed class PointSpecFactory : IRenderableFactory<PointSpec>
     {
-        public IRenderable Create(PointSpec value) =>
-            new LabelledPointRenderable(value.Position, FormatLabel(value.Position))
-            {
-                Colour = value.Colour,
-                DotRadius = 4f,
-            };
+        public Type? OptionsType => typeof(PointRenderOptions);
 
-        private static string FormatLabel(System.Numerics.Vector3 p)
+        public IRenderable Create(PointSpec value) => Create(value, null);
+
+        public IRenderable Create(PointSpec value, object? options)
         {
-            var ci = CultureInfo.InvariantCulture;
-            return $"({p.X.ToString("0.###", ci)}, {p.Y.ToString("0.###", ci)}, {p.Z.ToString("0.###", ci)})";
+            var opts = options as PointRenderOptions ?? new PointRenderOptions();
+            return new PointRenderable
+            {
+                Position = value.Position,
+                Colour = opts.Colour,
+                DotRadius = opts.DotRadius,
+                ShowLabel = opts.ShowLabel,
+            };
         }
     }
 }

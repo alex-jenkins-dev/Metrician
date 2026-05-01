@@ -8,6 +8,5 @@ namespace Metrician.Nodes.Geometry
     public sealed record CircleSpec(
         Vector3 Center,
         Vector3 Normal,
-        float Radius,
-        Color Colour);
+        float Radius);
 }

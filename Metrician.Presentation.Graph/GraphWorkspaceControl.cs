@@ -23,7 +23,7 @@ namespace Metrician.Presentation.Graph
             BackColor = theme.Background;
             ForeColor = theme.Text;
 
-            Properties = new PropertyPane(graph.World, theme) { Dock = DockStyle.Fill };
+            Properties = new PropertyPane(graph.World, graph.Presenter, theme) { Dock = DockStyle.Fill };
 
             _split = new SplitContainer
             {
@@ -45,6 +45,7 @@ namespace Metrician.Presentation.Graph
             Controls.Add(_split);
 
             graph.Presenter.SelectionChanged += (_, id) => Properties.ShowFor(id);
+            graph.Presenter.PinSelectionChanged += (_, pin) => Properties.ShowForPin(pin);
         }
 
         protected override void OnSizeChanged(EventArgs e)

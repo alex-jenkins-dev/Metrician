@@ -5,5 +5,5 @@ using System.Numerics;
 
 namespace Metrician.Nodes.Geometry
 {
-    public sealed record PointSpec(Vector3 Position, Color Colour);
+    public sealed record PointSpec(Vector3 Position);
 }

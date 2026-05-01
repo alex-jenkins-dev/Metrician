@@ -20,7 +20,6 @@ namespace Metrician.Nodes.Geometry
             a.Properties.Define("Center", Vector3.Zero);
             a.Properties.Define("Normal", Vector3.UnitZ);
             a.Properties.Define("Radius", 1f);
-            a.Properties.Define("Colour", Color.LimeGreen);
 
             a.Properties.Constrain("Normal", v =>
                 v is Vector3 vec && vec.LengthSquared() >= 1e-12f
@@ -34,8 +33,7 @@ namespace Metrician.Nodes.Geometry
                 ctx.Write("circle", new CircleSpec(
                     a.Properties.Get<Vector3>("Center"),
                     Vector3.Normalize(a.Properties.Get<Vector3>("Normal")),
-                    a.Properties.Get<float>("Radius"),
-                    a.Properties.Get<Color>("Colour")));
+                    a.Properties.Get<float>("Radius")));
             });
 
             a.Tags.Add("geometry");

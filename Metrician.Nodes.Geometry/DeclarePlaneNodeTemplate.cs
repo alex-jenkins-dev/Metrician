@@ -6,13 +6,13 @@ using Metrician.Core.Graph;
 
 namespace Metrician.Nodes.Geometry
 {
-    public sealed class PlaneNodeTemplate : INodeTemplate
+    public sealed class DeclarePlaneNodeTemplate : INodeTemplate
     {
-        public string Title => "Plane";
+        public string Title => "Declare Plane";
         public string Vendor => "Metrician";
         public string Description =>
             "A rectangular plane patch defined by a centre point, a normal direction, " +
-            "and a width and height for the wireframe rectangle.";
+            "and a width and height for the wireframe rectangle. Declared into existence.";
 
         public void Configure(INodeAuthor a)
         {
@@ -22,7 +22,6 @@ namespace Metrician.Nodes.Geometry
             a.Properties.Define("Normal", Vector3.UnitZ);
             a.Properties.Define("Width", 2f);
             a.Properties.Define("Height", 2f);
-            a.Properties.Define("Colour", Color.Khaki);
 
             a.Properties.Constrain("Normal", v =>
                 v is Vector3 vec && vec.LengthSquared() >= 1e-12f
@@ -40,8 +39,7 @@ namespace Metrician.Nodes.Geometry
                     a.Properties.Get<Vector3>("Center"),
                     Vector3.Normalize(a.Properties.Get<Vector3>("Normal")),
                     a.Properties.Get<float>("Width"),
-                    a.Properties.Get<float>("Height"),
-                    a.Properties.Get<Color>("Colour")));
+                    a.Properties.Get<float>("Height")));
             });
 
             a.Tags.Add("geometry");

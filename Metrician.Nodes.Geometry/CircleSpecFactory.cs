@@ -8,12 +8,21 @@ namespace Metrician.Nodes.Geometry
 {
     public sealed class CircleSpecFactory : IRenderableFactory<CircleSpec>
     {
-        public IRenderable Create(CircleSpec value) => new CircleRenderable
+        public Type? OptionsType => typeof(CircleRenderOptions);
+
+        public IRenderable Create(CircleSpec value) => Create(value, null);
+
+        public IRenderable Create(CircleSpec value, object? options)
         {
-            Center = value.Center,
-            Normal = value.Normal,
-            Radius = value.Radius,
-            Style = new StrokeStyle { Colour = value.Colour, Width = 1.5f },
-        };
+            var opts = options as CircleRenderOptions ?? new CircleRenderOptions();
+            return new CircleRenderable
+            {
+                Center = value.Center,
+                Normal = value.Normal,
+                Radius = value.Radius,
+                Style = new StrokeStyle { Colour = opts.Colour, Width = opts.LineWidth },
+                ShowNormal = opts.ShowNormal,
+            };
+        }
     }
 }

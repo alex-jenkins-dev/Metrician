@@ -2,9 +2,12 @@
 // See LICENSE file for full terms
 
 using System.Numerics;
+using System.Reflection;
 using Metrician.Core.Graph;
 using Metrician.Core.Scripting;
 using Metrician.Core.ScriptBinding;
+using Metrician.Library.Renderables;
+using Metrician.Model.Graph;
 
 namespace Metrician.Presentation.Graph
 {
@@ -18,6 +21,7 @@ namespace Metrician.Presentation.Graph
         private const string PlaceholderText = "No description";
 
         private readonly IGraphWorld _world;
+        private readonly GraphPresenter _presenter;
         private readonly GraphTheme _theme;
         private readonly Dictionary<string, Control> _editorsByProperty =
             new(StringComparer.Ordinal);
@@ -27,13 +31,15 @@ namespace Metrician.Presentation.Graph
         private readonly TextBox _descriptionBox;
 
         private NodeId? _node;
+        private PinId? _pin;
         private bool _suppressCommit;
         private bool _updatingScrollbars;
         private bool _initialSplitApplied;
 
-        public PropertyPane(IGraphWorld world, GraphTheme theme)
+        public PropertyPane(IGraphWorld world, GraphPresenter presenter, GraphTheme theme)
         {
             _world = world ?? throw new ArgumentNullException(nameof(world));
+            _presenter = presenter ?? throw new ArgumentNullException(nameof(presenter));
             _theme = theme ?? throw new ArgumentNullException(nameof(theme));
 
             BackColor = _theme.Background;
@@ -85,6 +91,9 @@ namespace Metrician.Presentation.Graph
             _world.Properties.Changed += OnPropertyChanged;
             _world.Layout.Changed += OnLayoutChanged;
             _world.Nodes.Removed += OnNodeRemoved;
+            _world.RenderOptions.Changed += OnRenderOptionsChanged;
+            _world.Wires.Connected += OnWireChanged;
+            _world.Wires.Disconnected += OnWireChanged;
 
             BuildEmpty();
         }
@@ -118,6 +127,15 @@ namespace Metrician.Presentation.Graph
         public void ShowFor(NodeId? id)
         {
             _node = id;
+            if (_pin is { } p && (id is null || p.Owner != id))
+                _pin = null;
+            Rebuild();
+        }
+
+        public void ShowForPin(PinId? pin)
+        {
+            if (Nullable.Equals(_pin, pin)) return;
+            _pin = pin;
             Rebuild();
         }
 
@@ -144,6 +162,172 @@ namespace Metrician.Presentation.Graph
                 _descriptionBox.ScrollBars = desired;
             }
             finally { _updatingScrollbars = false; }
+        }
+
+        private void BuildForRenderNode(NodeId nodeId, Node node)
+        {
+            var connectedPins = _world.Pins.Inputs(nodeId)
+                .Where(p => _world.Wires.SourceOf(p.Id) is not null)
+                .ToList();
+
+            var grid = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                ColumnCount = 2,
+                BackColor = _theme.Background,
+                ForeColor = _theme.Text,
+                Padding = new Padding(8, 8, 8, 8),
+                CellBorderStyle = TableLayoutPanelCellBorderStyle.None,
+            };
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60));
+
+            var header = new Label
+            {
+                Text = node.Title,
+                AutoSize = true,
+                Font = new Font(_theme.FontFamily, 10, FontStyle.Bold),
+                ForeColor = _theme.Text,
+                BackColor = _theme.Background,
+                Margin = new Padding(0, 0, 0, 6),
+                TextAlign = ContentAlignment.MiddleLeft,
+            };
+            grid.Controls.Add(header, 0, 0);
+            grid.SetColumnSpan(header, 2);
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            int row = 1;
+
+            if (connectedPins.Count == 0)
+            {
+                var hint = new Label
+                {
+                    Text = "No connected inputs",
+                    AutoSize = true,
+                    Font = new Font(_theme.FontFamily, 9, FontStyle.Italic),
+                    ForeColor = _theme.FooterText,
+                    BackColor = _theme.Background,
+                };
+                grid.Controls.Add(hint, 0, row);
+                grid.SetColumnSpan(hint, 2);
+                grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+                _scrollHost.Controls.Add(grid);
+                if (_pin is not null)
+                {
+                    _pin = null;
+                    _presenter.SelectPin(null);
+                }
+                SetDescription(node.Description);
+                return;
+            }
+
+            var activePin = _pin is { } sp && connectedPins.Any(p => p.Id == sp)
+                ? sp
+                : connectedPins[0].Id;
+
+            if (_pin != activePin)
+            {
+                _pin = activePin;
+                _presenter.SelectPin(activePin);
+            }
+
+            var pinCombo = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = _theme.NodeBackground,
+                ForeColor = _theme.Text,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = new Padding(0, 2, 0, 2),
+            };
+            foreach (var p in connectedPins) pinCombo.Items.Add(p.Id.Name);
+
+            try
+            {
+                _suppressCommit = true;
+                pinCombo.SelectedIndex = connectedPins.FindIndex(p => p.Id == activePin);
+            }
+            finally { _suppressCommit = false; }
+
+            var pinsCaptured = connectedPins.Select(p => p.Id).ToList();
+            pinCombo.SelectedIndexChanged += (_, _) =>
+            {
+                if (_suppressCommit) return;
+                int idx = pinCombo.SelectedIndex;
+                if (idx < 0 || idx >= pinsCaptured.Count) return;
+                _presenter.SelectPin(pinsCaptured[idx]);
+            };
+
+            AddRow(grid, ref row, "Pin", pinCombo);
+
+            BuildOptionsEditors(grid, ref row, activePin);
+
+            _scrollHost.Controls.Add(grid);
+            SetDescription(node.Description);
+        }
+
+        private void BuildOptionsEditors(TableLayoutPanel grid, ref int row, PinId pin)
+        {
+            var registry = _world.Resolve<IRenderableRegistry>();
+            if (registry is null) return;
+
+            var source = _world.Wires.SourceOf(pin);
+            if (source is not { } src) return;
+            var sourcePin = _world.Pins.Get(src);
+            if (sourcePin is null) return;
+
+            if (!registry.TryGetOptionsType(sourcePin.ValueType, out var optionsType) ||
+                optionsType is null) return;
+
+            var existing = _world.RenderOptions.Get(pin);
+            var instance = existing is not null && optionsType.IsInstanceOfType(existing)
+                ? existing
+                : Activator.CreateInstance(optionsType)
+                  ?? throw new InvalidOperationException(
+                      $"Render options type '{optionsType.Name}' has no parameterless constructor.");
+
+            foreach (var prop in optionsType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (!prop.CanRead || !prop.CanWrite) continue;
+                if (prop.GetIndexParameters().Length > 0) continue;
+                if (!IsEditableType(prop.PropertyType)) continue;
+
+                var capturedProp = prop;
+                var editor = BuildEditor(prop.PropertyType, prop.GetValue(instance), value =>
+                {
+                    try
+                    {
+                        capturedProp.SetValue(instance, value);
+                        _world.RenderOptions.Set(pin, instance);
+                    }
+                    catch
+                    {
+                        /* ignore type mismatch */
+                    }
+                });
+                AddRow(grid, ref row, prop.Name, editor);
+            }
+        }
+
+        private static bool IsEditableType(Type type)
+        {
+            var underlying = Nullable.GetUnderlyingType(type) ?? type;
+            if (underlying == typeof(bool)) return true;
+            if (underlying == typeof(Color)) return true;
+            if (underlying.IsEnum) return true;
+            return PropertyValueText.IsSupported(underlying);
+        }
+
+        private void OnRenderOptionsChanged(object? sender, PinId pin)
+        {
+            if (_node is { } n && pin.Owner == n) Rebuild();
+        }
+
+        private void OnWireChanged(object? sender, Wire wire)
+        {
+            if (_node is { } n && wire.Target.Owner == n) Rebuild();
         }
 
         private void BuildEmpty()
@@ -183,6 +367,12 @@ namespace Metrician.Presentation.Graph
             if (node is null)
             {
                 BuildEmpty();
+                return;
+            }
+
+            if (_world.Tags.Has(id, "render"))
+            {
+                BuildForRenderNode(id, node);
                 return;
             }
 

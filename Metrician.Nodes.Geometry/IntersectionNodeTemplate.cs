@@ -60,8 +60,7 @@ namespace Metrician.Nodes.Geometry
                 ctx.Write("circle", new CircleSpec(
                     cylinder.Center + axis * t,
                     axis,
-                    cylinder.Radius,
-                    plane.Colour));
+                    cylinder.Radius));
             });
 
             a.Tags.Add("geometry");

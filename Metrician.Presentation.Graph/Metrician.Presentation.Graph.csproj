@@ -13,6 +13,7 @@
     <ProjectReference Include="..\Metrician.Core.Scripting\Metrician.Core.Scripting.csproj" />
     <ProjectReference Include="..\Metrician.Core.ScriptBinding\Metrician.Core.ScriptBinding.csproj" />
     <ProjectReference Include="..\Metrician.Model.Graph\Metrician.Model.Graph.csproj" />
+    <ProjectReference Include="..\Metrician.Library.Renderables\Metrician.Library.Renderables.csproj" />
   </ItemGroup>
 
 </Project>
