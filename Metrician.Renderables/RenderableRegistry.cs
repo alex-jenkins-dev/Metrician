@@ -3,7 +3,7 @@
 
 using Metrician.Contracts.Renderables;
 
-namespace Metrician.Core
+namespace Metrician.Renderables
 {
     public sealed class RenderableRegistry : IRenderableRegistry
     {

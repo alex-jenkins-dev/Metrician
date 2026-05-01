@@ -1,14 +1,11 @@
 <Solution>
   <Project Path="Metrician.App/Metrician.App.csproj" />
-  <Project Path="Metrician.Core/Metrician.Core.csproj" Id="8d331141-eebb-4c46-923b-2e22b2733baf" />
   <Project Path="Metrician.Core.Graph/Metrician.Core.Graph.csproj" />
   <Project Path="Metrician.Core.Scripting/Metrician.Core.Scripting.csproj" />
   <Project Path="Metrician.Core.ScriptBinding/Metrician.Core.ScriptBinding.csproj" />
   <Project Path="Metrician.Bridge/Metrician.Bridge.csproj" />
   <Project Path="Metrician.Model.Graph/Metrician.Model.Graph.csproj" />
   <Project Path="Metrician.Presentation.Graph/Metrician.Presentation.Graph.csproj" />
-  <Project Path="Metrician.Graph/Metrician.Graph.csproj" Id="2de50fb7-9897-4c79-94e8-7b1f4de2ab27" />
-  <Project Path="Metrician.Contracts.Graph/Metrician.Contracts.Graph.csproj" />
   <Project Path="Metrician.Contracts.Renderables/Metrician.Contracts.Renderables.csproj" />
   <Project Path="Metrician.Rendering/Metrician.Rendering.csproj" />
   <Project Path="Metrician.Core.Plugins/Metrician.Core.Plugins.csproj" />

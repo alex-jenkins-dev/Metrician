@@ -18,7 +18,6 @@
     <ProjectReference Include="..\Metrician.Rendering\Metrician.Rendering.csproj" />
     <ProjectReference Include="..\Metrician.Renderables\Metrician.Renderables.csproj" />
     <ProjectReference Include="..\Metrician.Viewport\Metrician.Viewport.csproj" />
-    <ProjectReference Include="..\Metrician.Core\Metrician.Core.csproj" />
     <ProjectReference Include="..\Metrician.Core.Graph\Metrician.Core.Graph.csproj" />
     <ProjectReference Include="..\Metrician.Core.Scripting\Metrician.Core.Scripting.csproj" />
     <ProjectReference Include="..\Metrician.Core.ScriptBinding\Metrician.Core.ScriptBinding.csproj" />

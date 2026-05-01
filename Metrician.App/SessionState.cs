@@ -2,11 +2,11 @@
 // See LICENSE file for full terms
 
 using Metrician.Bridge;
-using Metrician.Core;
 using Metrician.Core.Graph;
 using Metrician.Core.Plugins;
 using Metrician.Core.ScriptBinding;
 using Metrician.Presentation.Graph;
+using Metrician.Renderables;
 using Metrician.Contracts.Renderables;
 
 namespace Metrician.App
