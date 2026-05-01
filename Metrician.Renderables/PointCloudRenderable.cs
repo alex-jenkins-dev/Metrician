@@ -3,7 +3,7 @@
 
 using System.Drawing.Imaging;
 using System.Numerics;
-using Metrician.Renderable.Contracts;
+using Metrician.Contracts.Renderables;
 using Metrician.Rendering;
 
 namespace Metrician.Renderables

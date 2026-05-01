@@ -3,7 +3,7 @@
 
 using Metrician.Rendering;
 
-namespace Metrician.Renderable.Contracts
+namespace Metrician.Contracts.Renderables
 {
     public interface IRenderable
     {

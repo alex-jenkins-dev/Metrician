@@ -6,7 +6,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing.Drawing2D;
 using System.Numerics;
-using Metrician.Renderable.Contracts;
+using Metrician.Contracts.Renderables;
 using Metrician.Rendering;
 
 namespace Metrician.Viewport

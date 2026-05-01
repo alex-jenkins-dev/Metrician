@@ -3,7 +3,7 @@
 
 using System.Collections.ObjectModel;
 
-using Metrician.Renderable.Contracts;
+using Metrician.Contracts.Renderables;
 using Metrician.Viewport;
 
 namespace Metrician.App

@@ -1,7 +1,7 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
-namespace Metrician.Renderable.Contracts
+namespace Metrician.Contracts.Renderables
 {
     public interface IRenderableFactory<in T>
     {

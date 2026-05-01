@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Metrician.Graph.Contracts\Metrician.Graph.Contracts.csproj" />
-    <ProjectReference Include="..\Metrician.Renderable.Contracts\Metrician.Renderable.Contracts.csproj" />
+    <ProjectReference Include="..\Metrician.Contracts.Graph\Metrician.Contracts.Graph.csproj" />
+    <ProjectReference Include="..\Metrician.Contracts.Renderables\Metrician.Contracts.Renderables.csproj" />
   </ItemGroup>
 
 </Project>

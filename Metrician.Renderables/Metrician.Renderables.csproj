@@ -7,7 +7,6 @@
     <!-- PointCloud uses unsafe pixel writes via LockBits for high-throughput
          rendering (10x+ faster than per-point GDI+ FillRectangle). -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Description>Metrician built-in renderables: PointCloud, AxisRenderable, CircleRenderable, ConeRenderable, CylinderRenderable, LabelledPoint, LineSegmentRenderable, LineSet, PlaneRenderable, RayRenderable, SphereRenderable, SurfaceNormalRenderable. Compose these in your IRenderableFactory output rather than rolling your own GDI+.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Metrician.Renderable.Contracts\Metrician.Renderable.Contracts.csproj" />
+    <ProjectReference Include="..\Metrician.Contracts.Renderables\Metrician.Contracts.Renderables.csproj" />
   </ItemGroup>
 
 </Project>

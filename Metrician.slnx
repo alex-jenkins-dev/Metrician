@@ -8,8 +8,8 @@
   <Project Path="Metrician.Model.Graph/Metrician.Model.Graph.csproj" />
   <Project Path="Metrician.Presentation.Graph/Metrician.Presentation.Graph.csproj" />
   <Project Path="Metrician.Graph/Metrician.Graph.csproj" Id="2de50fb7-9897-4c79-94e8-7b1f4de2ab27" />
-  <Project Path="Metrician.Graph.Contracts/Metrician.Graph.Contracts.csproj" />
-  <Project Path="Metrician.Renderable.Contracts/Metrician.Renderable.Contracts.csproj" />
+  <Project Path="Metrician.Contracts.Graph/Metrician.Contracts.Graph.csproj" />
+  <Project Path="Metrician.Contracts.Renderables/Metrician.Contracts.Renderables.csproj" />
   <Project Path="Metrician.Rendering/Metrician.Rendering.csproj" />
   <Project Path="Metrician.Core.Plugins/Metrician.Core.Plugins.csproj" />
   <Project Path="Metrician.Renderables/Metrician.Renderables.csproj" Id="f060a9dc-d2a2-4a7f-b10b-bc1e4acb9419" />

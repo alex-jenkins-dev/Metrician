@@ -2,7 +2,7 @@
 // See LICENSE file for full terms
 
 using System.ComponentModel;
-using Metrician.Graph.Contracts;
+using Metrician.Contracts.Graph;
 
 namespace Metrician.Core
 {

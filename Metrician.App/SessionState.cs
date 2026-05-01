@@ -7,7 +7,7 @@ using Metrician.Core.Graph;
 using Metrician.Core.Plugins;
 using Metrician.Core.ScriptBinding;
 using Metrician.Presentation.Graph;
-using Metrician.Renderable.Contracts;
+using Metrician.Contracts.Renderables;
 
 namespace Metrician.App
 {

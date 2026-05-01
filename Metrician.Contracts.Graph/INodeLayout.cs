@@ -3,7 +3,7 @@
 
 using System.Drawing;
 
-namespace Metrician.Graph.Contracts
+namespace Metrician.Contracts.Graph
 {
     /// <summary>
     /// Optional contract for nodes that expose a canvas-space position to the

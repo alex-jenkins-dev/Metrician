@@ -1,7 +1,7 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
-namespace Metrician.Graph.Contracts
+namespace Metrician.Contracts.Graph
 {
     /// <summary>
     /// Side-table of input pins whose wires currently read through a converter.

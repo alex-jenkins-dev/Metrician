@@ -4,7 +4,7 @@
     <!-- Concrete rendering-subsystem types: geometry primitives
          (BoundingBox3D, Ray3D), camera + viewport state (Camera3D,
          StandardView), the per-frame render context, and drawing
-         styles (StrokeStyle).  Sits under Metrician.Renderable.Contracts
+         styles (StrokeStyle).  Sits under Metrician.Contracts.Renderables
          so that contract assembly stays purely interfaces, while the
          types it transitively needs in its public API live here.
          Uses System.Drawing types (Pen, Color) so needs the windows
@@ -12,7 +12,6 @@
     <TargetFrameworks>$(MetricianLibraryFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Description>Metrician rendering primitives: BoundingBox3D, Ray3D, Camera3D, StandardView, RenderContext, StrokeStyle. Concrete types referenced by Metrician.Renderable.Contracts' interface signatures.</Description>
   </PropertyGroup>
 
   <ItemGroup>

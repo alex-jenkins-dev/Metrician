@@ -3,7 +3,7 @@
 
 using System.Drawing.Drawing2D;
 using Metrician.Core;
-using Metrician.Graph.Contracts;
+using Metrician.Contracts.Graph;
 
 namespace Metrician.Graph
 {

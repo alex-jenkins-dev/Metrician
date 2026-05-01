@@ -2,7 +2,7 @@
 // See LICENSE file for full terms
 
 using System.Numerics;
-using Metrician.Renderable.Contracts;
+using Metrician.Contracts.Renderables;
 using Metrician.Rendering;
 
 namespace Metrician.Renderables

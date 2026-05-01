@@ -1,7 +1,7 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
-namespace Metrician.Graph.Contracts
+namespace Metrician.Contracts.Graph
 {
     /// <summary>
     /// A node in the data-flow graph. Plugin authors usually inherit

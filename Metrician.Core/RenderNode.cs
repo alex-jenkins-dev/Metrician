@@ -1,8 +1,8 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
-using Metrician.Graph.Contracts;
-using Metrician.Renderable.Contracts;
+using Metrician.Contracts.Graph;
+using Metrician.Contracts.Renderables;
 
 namespace Metrician.Core
 {
