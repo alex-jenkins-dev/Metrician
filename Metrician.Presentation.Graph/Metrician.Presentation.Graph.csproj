@@ -10,6 +10,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Metrician.Core.Graph\Metrician.Core.Graph.csproj" />
+    <ProjectReference Include="..\Metrician.Core.Scripting\Metrician.Core.Scripting.csproj" />
+    <ProjectReference Include="..\Metrician.Core.ScriptBinding\Metrician.Core.ScriptBinding.csproj" />
     <ProjectReference Include="..\Metrician.Model.Graph\Metrician.Model.Graph.csproj" />
   </ItemGroup>
 

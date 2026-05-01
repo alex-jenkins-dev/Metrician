@@ -17,6 +17,7 @@ namespace Metrician.App
     {
         public GraphWorld World { get; } = new();
         public GraphControl GraphControl { get; }
+        public GraphWorkspaceControl Workspace { get; }
         public RenderableRegistry Renderables { get; } = new();
         public RenderSink RenderSink { get; }
 
@@ -31,7 +32,11 @@ namespace Metrician.App
             RenderSink = new RenderSink(World);
             _templateNames = new TemplateNameSystem(World.Nodes);
 
-            GraphControl = new GraphControl(World) { Dock = DockStyle.Fill };
+            GraphControl = new GraphControl(World);
+            Workspace = new GraphWorkspaceControl(GraphControl, GraphTheme.Dark)
+            {
+                Dock = DockStyle.Fill,
+            };
 
             var renderTemplate = new RenderNodeTemplate(Renderables, RenderSink.Publish);
 

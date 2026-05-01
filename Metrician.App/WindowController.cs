@@ -53,7 +53,7 @@ namespace Metrician.App
 
         public void RequestMode(DisplayMode requested)
         {
-            if (_session.GraphControl.Parent != null) _session.GraphControl.Parent = null;
+            if (_session.Workspace.Parent != null) _session.Workspace.Parent = null;
 
             switch (requested)
             {
@@ -67,14 +67,14 @@ namespace Metrician.App
                 case DisplayMode.Graph:
                     if (_mainForm != null)
                     {
-                        _mainForm.HostGraph(_session.GraphControl);
+                        _mainForm.HostGraph(_session.Workspace);
                         _mainShowsViewport = false;
                         CloseGraphFormIfOpen();
                     }
                     else
                     {
                         EnsureGraphForm();
-                        _graphForm!.HostGraph(_session.GraphControl);
+                        _graphForm!.HostGraph(_session.Workspace);
                     }
                     break;
 
@@ -83,7 +83,7 @@ namespace Metrician.App
                     _mainForm!.ShowViewport();
                     _mainShowsViewport = true;
                     EnsureGraphForm();
-                    _graphForm!.HostGraph(_session.GraphControl);
+                    _graphForm!.HostGraph(_session.Workspace);
                     break;
             }
 
@@ -112,7 +112,7 @@ namespace Metrician.App
         private void CloseGraphFormIfOpen()
         {
             if (_graphForm == null) return;
-            if (_session.GraphControl.Parent == _graphForm) _session.GraphControl.Parent = null;
+            if (_session.Workspace.Parent == _graphForm) _session.Workspace.Parent = null;
             var gf = _graphForm;
             _graphForm = null;
             gf.FormClosed -= OnGraphFormClosed;
@@ -126,10 +126,10 @@ namespace Metrician.App
 
             if (_graphForm != null)
             {
-                if (_session.GraphControl.Parent != _graphForm)
+                if (_session.Workspace.Parent != _graphForm)
                 {
-                    if (_session.GraphControl.Parent != null) _session.GraphControl.Parent = null;
-                    _graphForm.HostGraph(_session.GraphControl);
+                    if (_session.Workspace.Parent != null) _session.Workspace.Parent = null;
+                    _graphForm.HostGraph(_session.Workspace);
                 }
                 UpdateRadios();
             }
@@ -142,7 +142,7 @@ namespace Metrician.App
 
             if (_mainForm != null)
             {
-                if (_session.GraphControl.Parent != null) _session.GraphControl.Parent = null;
+                if (_session.Workspace.Parent != null) _session.Workspace.Parent = null;
                 _mainForm.ShowViewport();
                 _mainShowsViewport = true;
                 UpdateRadios();

@@ -8,7 +8,7 @@ namespace Metrician.SampleNodes.Ecs
 {
     public sealed class PointStreamNodeTemplate : INodeTemplate
     {
-        public string Title => "Probe Stream";
+        public string Title => "Point Stream";
         public string Vendor => "Samples";
         public string Description =>
             "Simulated emission of noisy point samples around a nominal location at a fixed rate.";
