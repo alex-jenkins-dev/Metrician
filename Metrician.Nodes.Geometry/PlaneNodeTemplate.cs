@@ -9,7 +9,7 @@ namespace Metrician.Nodes.Geometry
     public sealed class PlaneNodeTemplate : INodeTemplate
     {
         public string Title => "Plane";
-        public string Vendor => "Geometry";
+        public string Vendor => "Metrician";
         public string Description =>
             "A rectangular plane patch defined by a centre point, a normal direction, " +
             "and a width and height for the wireframe rectangle.";

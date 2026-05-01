@@ -4,15 +4,8 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Metrician.Plugins
+namespace Metrician.Core.Plugins
 {
-    /// <summary>
-    /// Glob patterns that mask plugin contributions during discovery.
-    /// Patterns ending in <c>.dll</c> match the assembly's simple name and
-    /// block the whole DLL up front; others match a type's namespace or full
-    /// name. <c>*</c> is the only wildcard. File format: one pattern per
-    /// line, <c>//</c> for comments.
-    /// </summary>
     public sealed class PluginExclusions
     {
         public static PluginExclusions Empty { get; } =
@@ -29,10 +22,6 @@ namespace Metrician.Plugins
 
         public bool IsEmpty => _assemblyPatterns.Length == 0 && _typePatterns.Length == 0;
 
-        /// <summary>
-        /// Returns the parsed exclusions from <paramref name="path"/>, or
-        /// <see cref="Empty"/> if it does not exist.
-        /// </summary>
         public static PluginExclusions FromFile(string path)
         {
             if (!File.Exists(path)) return Empty;
@@ -57,10 +46,6 @@ namespace Metrician.Plugins
             return new PluginExclusions(asm.ToArray(), typ.ToArray());
         }
 
-        /// <summary>
-        /// True when <paramref name="assemblyName"/> matches a <c>*.dll</c> pattern.
-        /// Type patterns are not consulted here.
-        /// </summary>
         public bool ExcludesAssembly(string assemblyName)
         {
             foreach (var p in _assemblyPatterns)
@@ -68,10 +53,6 @@ namespace Metrician.Plugins
             return false;
         }
 
-        /// <summary>
-        /// True when <paramref name="type"/>'s namespace or full name matches a pattern,
-        /// or when its assembly is excluded.
-        /// </summary>
         public bool ExcludesType(Type type)
         {
             if (IsEmpty) return false;
@@ -88,8 +69,6 @@ namespace Metrician.Plugins
             return false;
         }
 
-        // Anchored at both ends: 'Foo' matches only 'Foo';
-        // 'Foo*' matches 'Foo' and anything starting with it.
         private static Regex GlobToRegex(string glob)
         {
             var sb = new StringBuilder("^");

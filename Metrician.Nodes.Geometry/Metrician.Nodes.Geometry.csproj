@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWindowsForms>true</UseWindowsForms>
     <IsPackable>false</IsPackable>
-    <Description>Built-in geometry nodes — cylinder, plane, circle, plane/cylinder intersection — plus the renderable factories that turn their outputs into the corresponding wireframe primitives.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,5 +14,13 @@
     <ProjectReference Include="..\Metrician.Rendering\Metrician.Rendering.csproj" />
     <ProjectReference Include="..\Metrician.Renderables\Metrician.Renderables.csproj" />
   </ItemGroup>
+
+  <Target Name="CopyToAppPlugins" AfterTargets="Build">
+    <PropertyGroup>
+      <AppPluginsDir>$(MSBuildThisFileDirectory)..\Metrician.App\bin\$(Configuration)\$(TargetFramework)\Plugins\</AppPluginsDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(AppPluginsDir)" Condition="!Exists('$(AppPluginsDir)')" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(AppPluginsDir)" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

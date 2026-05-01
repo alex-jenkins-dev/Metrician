@@ -4,8 +4,8 @@
 using Metrician.Bridge;
 using Metrician.Core;
 using Metrician.Core.Graph;
+using Metrician.Core.Plugins;
 using Metrician.Core.ScriptBinding;
-using Metrician.Nodes.Geometry;
 using Metrician.Presentation.Graph;
 using Metrician.Renderable.Contracts;
 
@@ -13,6 +13,9 @@ namespace Metrician.App
 {
     internal sealed class SessionState
     {
+        private const string PluginsFolderName = "Plugins";
+        private const string ExclusionsFileName = "exclusions.txt";
+
         public GraphWorld World { get; } = new();
         public GraphControl GraphControl { get; }
         public GraphWorkspaceControl Workspace { get; }
@@ -24,13 +27,6 @@ namespace Metrician.App
 
         public SessionState()
         {
-            Renderables.Register(new CylinderSpecFactory());
-            Renderables.Register(new PlaneSpecFactory());
-            Renderables.Register(new CircleSpecFactory());
-            Renderables.Register(new PointSpecFactory());
-
-            World.Converters.Register(new CircleToPointConverter());
-
             RenderSink = new RenderSink(World);
             _templateNames = new TemplateNameSystem(World.Nodes);
 
@@ -41,27 +37,35 @@ namespace Metrician.App
             };
 
             var renderTemplate = new RenderNodeTemplate(Renderables, RenderSink.Publish);
-
-            _templates.Register(nameof(CylinderNodeTemplate),       () => new CylinderNodeTemplate());
-            _templates.Register(nameof(PlaneNodeTemplate),          () => new PlaneNodeTemplate());
-            _templates.Register(nameof(CircleNodeTemplate),         () => new CircleNodeTemplate());
-            _templates.Register(nameof(IntersectionNodeTemplate),   () => new IntersectionNodeTemplate());
-            _templates.Register(nameof(LabelledPointNodeTemplate),  () => new LabelledPointNodeTemplate());
-            _templates.Register(nameof(RenderNodeTemplate),         () => new RenderNodeTemplate(Renderables, RenderSink.Publish));
-
-            GraphControl.AvailableTemplates.Add(new CylinderNodeTemplate());
-            GraphControl.AvailableTemplates.Add(new PlaneNodeTemplate());
-            GraphControl.AvailableTemplates.Add(new CircleNodeTemplate());
-            GraphControl.AvailableTemplates.Add(new IntersectionNodeTemplate());
-            GraphControl.AvailableTemplates.Add(new LabelledPointNodeTemplate());
+            _templates.Register(nameof(RenderNodeTemplate),
+                () => new RenderNodeTemplate(Renderables, RenderSink.Publish));
             GraphControl.PinnedTemplates.Add(renderTemplate);
             GraphControl.KeyShortcuts[Keys.R] = renderTemplate;
+
+            LoadPlugins();
 
             GraphControl.Presenter.NodeSpawned += (_, e) =>
                 _templateNames.Set(e.Id, e.Template.GetType().Name);
 
             GraphControl.ScriptCommands = new GraphScriptCommands(
                 World, _templates, _templateNames, GraphControl);
+        }
+
+        private void LoadPlugins()
+        {
+            var pluginsDir = Path.Combine(AppContext.BaseDirectory, PluginsFolderName);
+            var exclusions = PluginExclusions.FromFile(
+                Path.Combine(AppContext.BaseDirectory, ExclusionsFileName));
+            var contributions = new List<NodeTemplateContribution>();
+
+            PluginLoader.LoadFromDirectory(
+                pluginsDir, Renderables, World.Converters, contributions, exclusions);
+
+            foreach (var contribution in contributions)
+            {
+                _templates.Register(contribution.Name, contribution.Create);
+                GraphControl.AvailableTemplates.Add(contribution.Create());
+            }
         }
     }
 

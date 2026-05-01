@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(MetricianLibraryFrameworks)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Description>Reflection-based plugin discovery for the ECS host: walks DLLs in a folder and surfaces INodeTemplate, IRenderableFactory&lt;T&gt;, and IValueConverter&lt;TFrom, TTo&gt; implementations for the host to register.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Metrician.Core.Graph\Metrician.Core.Graph.csproj" />
+    <ProjectReference Include="..\Metrician.Renderable.Contracts\Metrician.Renderable.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

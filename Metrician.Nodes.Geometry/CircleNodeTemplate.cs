@@ -9,7 +9,7 @@ namespace Metrician.Nodes.Geometry
     public sealed class CircleNodeTemplate : INodeTemplate
     {
         public string Title => "Circle";
-        public string Vendor => "Geometry";
+        public string Vendor => "Metrician";
         public string Description =>
             "A circle defined by its centre, the normal of the plane it lies in, and a radius.";
 

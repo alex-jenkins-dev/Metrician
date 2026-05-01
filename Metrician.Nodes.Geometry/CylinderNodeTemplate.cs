@@ -9,7 +9,7 @@ namespace Metrician.Nodes.Geometry
     public sealed class CylinderNodeTemplate : INodeTemplate
     {
         public string Title => "Cylinder";
-        public string Vendor => "Geometry";
+        public string Vendor => "Metrician";
         public string Description =>
             "A finite cylinder defined by its centre, axis direction, diameter, and height. " +
             "The axis is normalised; height extends symmetrically along it. " +

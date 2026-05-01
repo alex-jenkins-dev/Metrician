@@ -22,10 +22,18 @@
     <ProjectReference Include="..\Metrician.Core.Graph\Metrician.Core.Graph.csproj" />
     <ProjectReference Include="..\Metrician.Core.Scripting\Metrician.Core.Scripting.csproj" />
     <ProjectReference Include="..\Metrician.Core.ScriptBinding\Metrician.Core.ScriptBinding.csproj" />
+    <ProjectReference Include="..\Metrician.Core.Plugins\Metrician.Core.Plugins.csproj" />
     <ProjectReference Include="..\Metrician.Bridge\Metrician.Bridge.csproj" />
     <ProjectReference Include="..\Metrician.Model.Graph\Metrician.Model.Graph.csproj" />
     <ProjectReference Include="..\Metrician.Presentation.Graph\Metrician.Presentation.Graph.csproj" />
-    <ProjectReference Include="..\Metrician.Nodes.Geometry\Metrician.Nodes.Geometry.csproj" />
+    <!-- Build-only dependency: Geometry is loaded at runtime from the Plugins
+         folder, not compiled into the host. The reference exists so the
+         solution build orders Geometry before App and the plugin DLL is
+         present when the app runs. -->
+    <ProjectReference Include="..\Metrician.Nodes.Geometry\Metrician.Nodes.Geometry.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -39,6 +47,12 @@
     <Compile Update="AboutBox.cs">
       <SubType>Form</SubType>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="exclusions.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

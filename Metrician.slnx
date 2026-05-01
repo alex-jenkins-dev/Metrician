@@ -11,9 +11,8 @@
   <Project Path="Metrician.Graph.Contracts/Metrician.Graph.Contracts.csproj" />
   <Project Path="Metrician.Renderable.Contracts/Metrician.Renderable.Contracts.csproj" />
   <Project Path="Metrician.Rendering/Metrician.Rendering.csproj" />
-  <Project Path="Metrician.Plugins/Metrician.Plugins.csproj" />
+  <Project Path="Metrician.Core.Plugins/Metrician.Core.Plugins.csproj" />
   <Project Path="Metrician.Renderables/Metrician.Renderables.csproj" Id="f060a9dc-d2a2-4a7f-b10b-bc1e4acb9419" />
-  <Project Path="Metrician.SampleNodes/Metrician.SampleNodes.csproj" />
   <Project Path="Metrician.Nodes.Geometry/Metrician.Nodes.Geometry.csproj" />
   <Project Path="Metrician.Viewport/Metrician.Viewport.csproj" Id="dc4b3f4c-91e1-4f2f-9fed-cd62b0a5bd43" />
 </Solution>

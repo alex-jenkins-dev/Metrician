@@ -12,7 +12,7 @@ namespace Metrician.Nodes.Geometry
         private const float PerpendicularityTolerance = 0.999f;
 
         public string Title => "Intersection";
-        public string Vendor => "Geometry";
+        public string Vendor => "Metrician";
         public string Description =>
             "Intersects a plane with a cylinder and outputs the resulting circle. " +
             "Succeeds only when the plane is perpendicular to the cylinder's axis " +
