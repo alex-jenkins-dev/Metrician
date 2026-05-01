@@ -1,61 +1,100 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
+using System.Numerics;
+using Metrician.Bridge;
 using Metrician.Core;
-using Metrician.Graph;
-using Metrician.Graph.Contracts;
+using Metrician.Core.Graph;
+using Metrician.Presentation.Graph;
+using Metrician.Renderable.Contracts;
+using Metrician.SampleNodes;
+using Metrician.SampleNodes.Ecs;
 
 namespace Metrician.App
 {
-    /// <summary>
-    /// Session state that outlives any one window: graph, registry, and the
-    /// persistent graph-editor controls. Controls migrate between forms via
-    /// reparenting and are disposed only at app exit.
-    /// </summary>
     internal sealed class SessionState
     {
-        public RenderableRegistry Registry { get; } = new();
-        public ValueConverterRegistry Converters { get; } = new();
-        public WireConversions Conversions { get; } = new();
-        public NodeGraph Graph { get; } = new();
-        public NodeGraphControl GraphControl { get; }
-        public PropertyGrid PropertyGrid { get; }
-        public SplitContainer GraphHost { get; }
+        public GraphWorld World { get; } = new();
+        public GraphControl GraphControl { get; }
+        public RenderableRegistry Renderables { get; } = new();
+        public RenderSink RenderSink { get; }
 
         public SessionState()
         {
-            GraphControl = new NodeGraphControl(Graph)
-            {
-                Dock = DockStyle.Fill,
-                Converters = Converters,
-                Conversions = Conversions,
-            };
+            Renderables.Register(new Vector3PointFactory());
+            Renderables.Register(new SphereSpecFactory());
 
-            PropertyGrid = new PropertyGrid
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(30, 30, 35),
-                ViewBackColor = Color.FromArgb(40, 40, 45),
-                ViewForeColor = Color.FromArgb(220, 220, 220),
-                LineColor = Color.FromArgb(63, 63, 70),
-                CategoryForeColor = Color.FromArgb(220, 220, 220),
-                HelpBackColor = Color.FromArgb(40, 40, 45),
-                HelpForeColor = Color.FromArgb(220, 220, 220),
-                CommandsBackColor = Color.FromArgb(30, 30, 35),
-                CommandsForeColor = Color.FromArgb(220, 220, 220),
-                ToolbarVisible = false,
-            };
+            RenderSink = new RenderSink(World);
 
-            GraphHost = new SplitContainer
-            {
-                Dock = DockStyle.Fill,
-                Orientation = Orientation.Vertical,
-                BackColor = Color.FromArgb(30, 30, 35),
-            };
-            GraphHost.Panel1.Controls.Add(GraphControl);
-            GraphHost.Panel2.Controls.Add(PropertyGrid);
+            GraphControl = new GraphControl(World) { Dock = DockStyle.Fill };
 
-            GraphHost.SplitterDistance = (int)(GraphHost.Width * 0.75);
+            var renderTemplate = new RenderNodeTemplate(Renderables, RenderSink.Publish);
+
+            // TODO: Pluginise these.
+            GraphControl.AvailableTemplates.Add(new NominalPointNodeTemplate());
+            GraphControl.AvailableTemplates.Add(new PointStreamNodeTemplate());
+            GraphControl.AvailableTemplates.Add(new MeanPointodeTemplate());
+            GraphControl.AvailableTemplates.Add(new PointDistanceNodeTemplate());
+            GraphControl.AvailableTemplates.Add(new ToleranceCheckNodeTemplate());
+            GraphControl.PinnedTemplates.Add(renderTemplate);
+            GraphControl.KeyShortcuts[Keys.R] = renderTemplate;
+
+            SeedDemoGraph(renderTemplate);
+        }
+
+        private void SeedDemoGraph(RenderNodeTemplate renderTemplate)
+        {
+            var nominal = World.Add(new NominalPointNodeTemplate());
+            var probe = World.Add(new PointStreamNodeTemplate());
+            var render = World.Add(renderTemplate);
+            var distance = World.Add(new PointDistanceNodeTemplate());
+
+            World.Layout.Set(nominal,  new Vector2(60, 60));
+            World.Layout.Set(probe,    new Vector2(60, 240));
+            World.Layout.Set(distance, new Vector2(320, 140));
+            World.Layout.Set(render,   new Vector2(320, 360));
+
+            World.Wires.TryConnect(
+                new PinId(nominal, "position", PinDirection.Output),
+                new PinId(distance, "feature a", PinDirection.Input));
+            World.Wires.TryConnect(
+                new PinId(probe, "sample", PinDirection.Output),
+                new PinId(distance, "feature b", PinDirection.Input));
+
+            World.Wires.TryConnect(
+                new PinId(probe, "sample", PinDirection.Output),
+                new PinId(render, "in 0", PinDirection.Input));
+            World.Wires.TryConnect(
+                new PinId(nominal, "position", PinDirection.Output),
+                new PinId(render, "in 1", PinDirection.Input));
+        }
+    }
+
+    internal sealed class RenderSink
+    {
+        private readonly Dictionary<NodeId, IReadOnlyList<IRenderable>> _byNode = new();
+
+        public RenderSink(IGraphWorld world)
+        {
+            world.Nodes.Removed += (_, id) =>
+            {
+                if (_byNode.Remove(id)) Changed?.Invoke(this, EventArgs.Empty);
+            };
+        }
+
+        public event EventHandler? Changed;
+
+        public void Publish(NodeId node, IReadOnlyList<IRenderable> items)
+        {
+            _byNode[node] = items;
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+
+        public IEnumerable<IRenderable> All()
+        {
+            foreach (var list in _byNode.Values)
+                foreach (var r in list)
+                    yield return r;
         }
     }
 }

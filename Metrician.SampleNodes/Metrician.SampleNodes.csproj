@@ -13,6 +13,7 @@
     <ProjectReference Include="..\Metrician.Graph.Contracts\Metrician.Graph.Contracts.csproj" />
     <ProjectReference Include="..\Metrician.Renderable.Contracts\Metrician.Renderable.Contracts.csproj" />
     <ProjectReference Include="..\Metrician.Core\Metrician.Core.csproj" />
+    <ProjectReference Include="..\Metrician.Core.Graph\Metrician.Core.Graph.csproj" />
     <ProjectReference Include="..\Metrician.Rendering\Metrician.Rendering.csproj" />
     <ProjectReference Include="..\Metrician.Renderables\Metrician.Renderables.csproj" />
   </ItemGroup>
