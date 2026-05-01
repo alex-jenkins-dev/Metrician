@@ -60,13 +60,26 @@ namespace Metrician.Presentation.Graph
 
             using (var titleBrush = new SolidBrush(_theme.Text))
             using (var titleFont = new Font(_theme.FontFamily, 9f, FontStyle.Bold))
-                g.DrawString(node.Title, titleFont, titleBrush, rect.X + 10, rect.Y + 5);
+            {
+                var titleSize = g.MeasureString(node.Title, titleFont);
+                float titleX = rect.X + (rect.Width - titleSize.Width) / 2f;
+                float titleY = rect.Y + (m.HeaderHeight - titleSize.Height) / 2f;
+                g.DrawString(node.Title, titleFont, titleBrush, titleX, titleY);
+            }
+
+            const int dotRadius = 4;
+            int dotCy = rect.Y + m.HeaderHeight / 2;
+
+            var statusColour = ResolveStatusColour(world, node.Id);
+            int statusCx = rect.X + 12;
+            using (var statusBrush = new SolidBrush(statusColour))
+                g.FillEllipse(statusBrush,
+                    statusCx - dotRadius, dotCy - dotRadius,
+                    dotRadius * 2, dotRadius * 2);
 
             if (world.DynamicUpdates.HasLifetime(node.Id))
             {
-                const int dotRadius = 4;
                 int dotCx = rect.Right - 12;
-                int dotCy = rect.Y + m.HeaderHeight / 2;
                 using var dotBrush = new SolidBrush(_theme.DynamicIndicator);
                 g.FillEllipse(dotBrush,
                     dotCx - dotRadius, dotCy - dotRadius,
@@ -103,6 +116,14 @@ namespace Metrician.Presentation.Graph
             g.DrawString(footerText, footerFont, footerBrush,
                 rect.Left + (rect.Width - footerSize.Width) / 2f,
                 rect.Bottom - footerSize.Height - 4);
+        }
+
+        private Color ResolveStatusColour(IGraphWorld world, NodeId id)
+        {
+            if (world.Errors.Get(id).Count > 0) return _theme.StatusError;
+            var status = world.Status.Get(id);
+            if (status?.Readiness == NodeReadiness.Ready) return _theme.StatusReady;
+            return _theme.StatusNotReady;
         }
 
         private Color ResolvePinColour(IGraphWorld world, PinId pin, bool connected)

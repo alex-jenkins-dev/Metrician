@@ -33,6 +33,8 @@ namespace Metrician.Model.Graph
             _world.Nodes.Removed += OnWorldChanged;
             _world.Layout.Changed += OnWorldChanged;
             _world.PinColours.Changed += OnWorldChanged;
+            _world.Status.Changed += OnWorldChanged;
+            _world.Errors.Changed += OnWorldChanged;
         }
 
         public IGraphWorld World => _world;
