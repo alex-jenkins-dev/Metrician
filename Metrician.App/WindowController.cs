@@ -1,10 +1,7 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
-using Metrician.Graph;
-using Metrician.Graph.Contracts;
-using Metrician.Plugins;
-using Metrician.Script;
+using Metrician.Core.Graph;
 
 namespace Metrician.App
 {
@@ -17,9 +14,7 @@ namespace Metrician.App
     {
         private readonly MultiFormApplicationContext _ctx;
         private readonly SessionState _session;
-        private readonly DynamicNodeCoordinator _dynamics;
-
-        private GraphViewportBinding? _binding;
+        private int _evaluateScheduled;
 
         private MainForm? _mainForm;
         private GraphForm? _graphForm;
@@ -27,137 +22,21 @@ namespace Metrician.App
         // Only meaningful when _mainForm != null.
         private bool _mainShowsViewport = true;
 
-        private readonly PluginLoadResult _plugins;
-
         public WindowController(MultiFormApplicationContext ctx, string? scriptPath = null)
         {
+            _ = scriptPath; // scripting is unhooked while the new ECS path beds in.
             _ctx = ctx;
             _session = new SessionState();
 
-            _dynamics = new DynamicNodeCoordinator(
-                _session.Graph,
-                anchorProvider: () => (Control?)_mainForm ?? _graphForm,
-                refresh: () => _binding?.Refresh());
+            var world = _session.World;
+            world.Wires.Connected += (_, _) => Evaluate();
+            world.Wires.Disconnected += (_, _) => Evaluate();
+            world.Properties.Changed += (_, _) => Evaluate();
+            world.RenderOptions.Changed += (_, _) => Evaluate();
+            world.DynamicUpdates.UpdateRequested += OnDynamicRefreshRequested;
+            _session.RenderSink.Changed += (_, _) => RefreshViewport();
 
-            _session.GraphControl.GraphChanged       += OnGraphChanged;
-            _session.GraphControl.SelectionChanged   += OnSelectionChanged;
-            _session.GraphControl.SaveGraphRequested  += OnSaveGraphRequested;
-            _session.GraphControl.LoadGraphRequested  += OnLoadGraphRequested;
-            _session.GraphControl.AppendGraphRequested+= OnAppendGraphRequested;
-            _session.PropertyGrid.PropertyValueChanged += OnPropertyChanged;
-
-            _plugins = PluginInstaller.Install(_session);
-            if (scriptPath != null)
-                LoadStartupScript(scriptPath);
-        }
-
-        private void LoadStartupScript(string scriptPath)
-        {
-            try
-            {
-                var script = GraphScriptText.ReadFile(scriptPath);
-                var factories = PluginInstaller.ScriptFactories(_session, _plugins);
-                var nodes = GraphScriptApplier.Apply(
-                    script, factories, _session.Converters, _session.Conversions);
-                if (nodes.Count == 0) return;
-                if (script.HasPositions)
-                    _session.GraphControl.AddNodes(nodes);
-                else
-                    _session.GraphControl.AddNodesWithLayout(nodes);
-            }
-            catch (ScriptException ex)
-            {
-                ShowScriptError($"Failed to load script '{scriptPath}'", ex);
-            }
-        }
-
-        private void OnSaveGraphRequested(object? sender, EventArgs e)
-        {
-            using var dlg = new SaveFileDialog
-            {
-                Filter = "Metrician script (*.metrician)|*.metrician|All files (*.*)|*.*",
-                DefaultExt = "metrician",
-                FileName = "graph.metrician",
-                AddExtension = true,
-                OverwritePrompt = true,
-            };
-            if (dlg.ShowDialog((Control?)_mainForm ?? _graphForm) != DialogResult.OK) return;
-
-            try
-            {
-                var script = GraphScriptIntrospector.Introspect(_session.Graph.Nodes);
-                GraphScriptText.WriteFile(dlg.FileName, script);
-            }
-            catch (ScriptException ex)
-            {
-                ShowScriptError($"Failed to save graph to '{dlg.FileName}'", ex);
-            }
-        }
-
-        private void OnLoadGraphRequested(object? sender, EventArgs e)
-        {
-            if (TryPickAndApplyScript(out var nodes, out var hadPositions))
-            {
-                _session.GraphControl.ClearGraph();
-                if (hadPositions)
-                    _session.GraphControl.AddNodes(nodes);
-                else
-                    _session.GraphControl.AddNodesWithLayout(nodes);
-            }
-        }
-
-        // Auto-layout when the script has no positions, otherwise the
-        // appended nodes stack on the origin.
-        private void OnAppendGraphRequested(object? sender, EventArgs e)
-        {
-            if (TryPickAndApplyScript(out var nodes, out var hadPositions))
-            {
-                if (hadPositions)
-                    _session.GraphControl.AddNodes(nodes);
-                else
-                    _session.GraphControl.AddNodesWithLayout(nodes);
-            }
-        }
-
-        // Shared open-dialog + parse + apply for Load and Append.
-        private bool TryPickAndApplyScript(
-            out IReadOnlyList<INode> nodes, out bool hadPositions)
-        {
-            nodes = Array.Empty<INode>();
-            hadPositions = false;
-
-            using var dlg = new OpenFileDialog
-            {
-                Filter = "Metrician script (*.metrician)|*.metrician|All files (*.*)|*.*",
-                DefaultExt = "metrician",
-            };
-            if (dlg.ShowDialog((Control?)_mainForm ?? _graphForm) != DialogResult.OK)
-                return false;
-
-            try
-            {
-                var script = GraphScriptText.ReadFile(dlg.FileName);
-                var factories = PluginInstaller.ScriptFactories(_session, _plugins);
-                nodes = GraphScriptApplier.Apply(
-                    script, factories, _session.Converters, _session.Conversions);
-                hadPositions = script.HasPositions;
-                return nodes.Count > 0;
-            }
-            catch (ScriptException ex)
-            {
-                ShowScriptError($"Failed to load graph from '{dlg.FileName}'", ex);
-                return false;
-            }
-        }
-
-        private void ShowScriptError(string headline, ScriptException ex)
-        {
-            string where = ex.LineNumber > 0 ? $" (line {ex.LineNumber})" : "";
-            MessageBox.Show(
-                $"{headline}{where}:\n\n{ex.Message}",
-                "Metrician",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
+            Evaluate();
         }
 
         public DisplayMode ActualMode
@@ -171,14 +50,11 @@ namespace Metrician.App
             }
         }
 
-        public void Start() => RequestMode(DisplayMode.ThreeD);
+        public void Start() => RequestMode(DisplayMode.Both);
 
-        /// <summary>
-        /// Routes a mode-change from either form's title-bar menu, creating and destroying windows as needed.
-        /// </summary>
         public void RequestMode(DisplayMode requested)
         {
-            if (_session.GraphHost.Parent != null) _session.GraphHost.Parent = null;
+            if (_session.Workspace.Parent != null) _session.Workspace.Parent = null;
 
             switch (requested)
             {
@@ -192,14 +68,14 @@ namespace Metrician.App
                 case DisplayMode.Graph:
                     if (_mainForm != null)
                     {
-                        _mainForm.HostGraph(_session.GraphHost);
+                        _mainForm.HostGraph(_session.Workspace);
                         _mainShowsViewport = false;
                         CloseGraphFormIfOpen();
                     }
                     else
                     {
                         EnsureGraphForm();
-                        _graphForm!.HostGraph(_session.GraphHost);
+                        _graphForm!.HostGraph(_session.Workspace);
                     }
                     break;
 
@@ -208,7 +84,7 @@ namespace Metrician.App
                     _mainForm!.ShowViewport();
                     _mainShowsViewport = true;
                     EnsureGraphForm();
-                    _graphForm!.HostGraph(_session.GraphHost);
+                    _graphForm!.HostGraph(_session.Workspace);
                     break;
             }
 
@@ -222,9 +98,7 @@ namespace Metrician.App
             _mainForm.FormClosed += OnMainFormClosed;
             _ctx.Track(_mainForm);
             _mainForm.Show();
-
-            _binding = new GraphViewportBinding(_session.Graph, _mainForm.Renderables);
-            _binding.Refresh();
+            RefreshViewport();
         }
 
         private void EnsureGraphForm()
@@ -239,9 +113,8 @@ namespace Metrician.App
         private void CloseGraphFormIfOpen()
         {
             if (_graphForm == null) return;
-            if (_session.GraphHost.Parent == _graphForm) _session.GraphHost.Parent = null;
+            if (_session.Workspace.Parent == _graphForm) _session.Workspace.Parent = null;
             var gf = _graphForm;
-            // Clear the field before Close so FormClosed does not re-enter.
             _graphForm = null;
             gf.FormClosed -= OnGraphFormClosed;
             gf.Close();
@@ -251,14 +124,13 @@ namespace Metrician.App
         {
             if (_mainForm != null) _mainForm.FormClosed -= OnMainFormClosed;
             _mainForm = null;
-            _binding = null;
 
             if (_graphForm != null)
             {
-                if (_session.GraphHost.Parent != _graphForm)
+                if (_session.Workspace.Parent != _graphForm)
                 {
-                    if (_session.GraphHost.Parent != null) _session.GraphHost.Parent = null;
-                    _graphForm.HostGraph(_session.GraphHost);
+                    if (_session.Workspace.Parent != null) _session.Workspace.Parent = null;
+                    _graphForm.HostGraph(_session.Workspace);
                 }
                 UpdateRadios();
             }
@@ -271,7 +143,7 @@ namespace Metrician.App
 
             if (_mainForm != null)
             {
-                if (_session.GraphHost.Parent != null) _session.GraphHost.Parent = null;
+                if (_session.Workspace.Parent != null) _session.Workspace.Parent = null;
                 _mainForm.ShowViewport();
                 _mainShowsViewport = true;
                 UpdateRadios();
@@ -285,24 +157,39 @@ namespace Metrician.App
             _graphForm?.UpdateModeRadio(mode);
         }
 
-        private void OnGraphChanged(object? sender, EventArgs e)
+        private void OnDynamicRefreshRequested(object? sender, NodeId id)
         {
-            _dynamics.Sync();
-            _binding?.Refresh();
+            var anchor = (Control?)_mainForm ?? _graphForm;
+            if (anchor is null || anchor.IsDisposed || !anchor.IsHandleCreated) return;
+            if (Interlocked.Exchange(ref _evaluateScheduled, 1) != 0) return;
+            anchor.BeginInvoke(new Action(() =>
+            {
+                Interlocked.Exchange(ref _evaluateScheduled, 0);
+                Evaluate();
+                _session.GraphControl.Invalidate();
+            }));
         }
 
-        private void OnSelectionChanged(object? sender, EventArgs e)
-            => _session.PropertyGrid.SelectedObject = _session.GraphControl.SelectedNode;
-
-        private void OnPropertyChanged(object? sender, PropertyValueChangedEventArgs e)
+        private void Evaluate()
         {
-            // Let IDynamicPins nodes resize their pin set before re-evaluation.
-            if (_session.GraphControl.SelectedNode is IDynamicPins dyn)
+            try { _session.World.Evaluation.EvaluateAll(); }
+            catch (Exception) { /* surfaced via NodeErrorSystem in evaluators */ }
+        }
+
+        private void RefreshViewport()
+        {
+            if (_mainForm is null || _mainForm.IsDisposed) return;
+            if (!_mainForm.IsHandleCreated) return;
+            if (_mainForm.InvokeRequired)
             {
-                dyn.RebuildPins();
-                _session.GraphControl.Invalidate();
+                _mainForm.BeginInvoke(new Action(RefreshViewport));
+                return;
             }
-            _binding?.Refresh();
+            var sink = _session.RenderSink;
+            var renderables = _mainForm.Renderables;
+            renderables.Clear();
+            foreach (var r in sink.All())
+                renderables.Add(r);
         }
     }
 }

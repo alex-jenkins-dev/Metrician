@@ -40,7 +40,7 @@ namespace Metrician.App
         {
             nint sysMenu = GetSystemMenu(hWnd, false);
             AppendMenu(sysMenu, MF_SEPARATOR, 0, null);
-            AppendMenu(sysMenu, MF_STRING, IDM_MODE_3D,    "&3D");
+            AppendMenu(sysMenu, MF_STRING, IDM_MODE_3D,    "&Viewports");
             AppendMenu(sysMenu, MF_STRING, IDM_MODE_GRAPH, "&Graph");
             AppendMenu(sysMenu, MF_STRING, IDM_MODE_BOTH,  "&Both");
             AppendMenu(sysMenu, MF_SEPARATOR, 0, null);

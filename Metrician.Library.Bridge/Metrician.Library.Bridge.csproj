@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(MetricianLibraryFrameworks)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Metrician.Core.Graph\Metrician.Core.Graph.csproj" />
+    <ProjectReference Include="..\Metrician.Library.Renderables\Metrician.Library.Renderables.csproj" />
+  </ItemGroup>
+
+</Project>

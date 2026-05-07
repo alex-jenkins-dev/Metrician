@@ -1,61 +1,109 @@
 // MIT License - Copyright (c) 2026 Alex Jenkins
 // See LICENSE file for full terms
 
-using Metrician.Core;
-using Metrician.Graph;
-using Metrician.Graph.Contracts;
+using Metrician.Library.Bridge;
+using Metrician.Core.Graph;
+using Metrician.Core.Plugins;
+using Metrician.Core.ScriptBinding;
+using Metrician.Presentation.Graph;
+using Metrician.Library.Renderables;
 
 namespace Metrician.App
 {
-    /// <summary>
-    /// Session state that outlives any one window: graph, registry, and the
-    /// persistent graph-editor controls. Controls migrate between forms via
-    /// reparenting and are disposed only at app exit.
-    /// </summary>
     internal sealed class SessionState
     {
-        public RenderableRegistry Registry { get; } = new();
-        public ValueConverterRegistry Converters { get; } = new();
-        public WireConversions Conversions { get; } = new();
-        public NodeGraph Graph { get; } = new();
-        public NodeGraphControl GraphControl { get; }
-        public PropertyGrid PropertyGrid { get; }
-        public SplitContainer GraphHost { get; }
+        private const string PluginsFolderName = "Plugins";
+        private const string ExclusionsFileName = "exclusions.txt";
+
+        public GraphWorld World { get; } = new();
+        public GraphControl GraphControl { get; }
+        public GraphWorkspaceControl Workspace { get; }
+        public RenderableRegistry Renderables { get; } = new();
+        public RenderSink RenderSink { get; }
+
+        private readonly NodeTemplateRegistry _templates = new();
+        private readonly TemplateNameSystem _templateNames;
 
         public SessionState()
         {
-            GraphControl = new NodeGraphControl(Graph)
+            RenderSink = new RenderSink(World);
+            World.Register<IRenderableRegistry>(Renderables);
+            _templateNames = new TemplateNameSystem(World.Nodes);
+
+            GraphControl = new GraphControl(World);
+            Workspace = new GraphWorkspaceControl(GraphControl, GraphTheme.Dark)
             {
                 Dock = DockStyle.Fill,
-                Converters = Converters,
-                Conversions = Conversions,
             };
 
-            PropertyGrid = new PropertyGrid
+            var renderTemplate = new RenderNodeTemplate(
+                Renderables, World.RenderOptions, RenderSink.Publish);
+
+            _templates.Register(nameof(RenderNodeTemplate),
+                () => new RenderNodeTemplate(
+                    Renderables, World.RenderOptions, RenderSink.Publish));
+
+            GraphControl.PinnedTemplates.Add(renderTemplate);
+            GraphControl.KeyShortcuts[Keys.R] = renderTemplate;
+
+            LoadPlugins();
+
+            GraphControl.Presenter.NodeSpawned += (_, e) =>
+                _templateNames.Set(e.Id, e.Template.GetType().Name);
+
+            GraphControl.ScriptCommands = new GraphScriptCommands(
+                World, _templates, _templateNames, GraphControl);
+        }
+
+        private void LoadPlugins()
+        {
+            var pluginsDir = Path.Combine(AppContext.BaseDirectory, PluginsFolderName);
+            var exclusions = PluginExclusions.FromFile(
+                Path.Combine(AppContext.BaseDirectory, ExclusionsFileName));
+            var contributions = new List<NodeTemplateContribution>();
+
+            PluginLoader.LoadFromDirectory(
+                pluginsDir, Renderables, World.Converters, contributions, exclusions);
+
+            foreach (var contribution in contributions)
             {
-                Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(30, 30, 35),
-                ViewBackColor = Color.FromArgb(40, 40, 45),
-                ViewForeColor = Color.FromArgb(220, 220, 220),
-                LineColor = Color.FromArgb(63, 63, 70),
-                CategoryForeColor = Color.FromArgb(220, 220, 220),
-                HelpBackColor = Color.FromArgb(40, 40, 45),
-                HelpForeColor = Color.FromArgb(220, 220, 220),
-                CommandsBackColor = Color.FromArgb(30, 30, 35),
-                CommandsForeColor = Color.FromArgb(220, 220, 220),
-                ToolbarVisible = false,
-            };
+                _templates.Register(contribution.Name, contribution.Create);
+                GraphControl.AvailableTemplates.Add(contribution.Create());
+            }
+        }
+    }
 
-            GraphHost = new SplitContainer
+    internal sealed class RenderSink
+    {
+        private readonly Dictionary<NodeId, IReadOnlyList<IRenderable>> _byNode = new();
+
+        public RenderSink(IGraphWorld world)
+        {
+            world.Nodes.Removed += (_, id) => Remove(id);
+            world.Errors.Changed += (_, id) =>
             {
-                Dock = DockStyle.Fill,
-                Orientation = Orientation.Vertical,
-                BackColor = Color.FromArgb(30, 30, 35),
+                if (world.Errors.Get(id).Count > 0) Remove(id);
             };
-            GraphHost.Panel1.Controls.Add(GraphControl);
-            GraphHost.Panel2.Controls.Add(PropertyGrid);
+        }
 
-            GraphHost.SplitterDistance = (int)(GraphHost.Width * 0.75);
+        public event EventHandler? Changed;
+
+        public void Publish(NodeId node, IReadOnlyList<IRenderable> items)
+        {
+            _byNode[node] = items;
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+
+        public IEnumerable<IRenderable> All()
+        {
+            foreach (var list in _byNode.Values)
+                foreach (var r in list)
+                    yield return r;
+        }
+
+        private void Remove(NodeId id)
+        {
+            if (_byNode.Remove(id)) Changed?.Invoke(this, EventArgs.Empty);
         }
     }
 }

@@ -3,13 +3,16 @@
 
 using System.Collections.ObjectModel;
 
-using Metrician.Renderable.Contracts;
-using Metrician.Viewport;
+using Metrician.Library.Renderables;
+using Metrician.Library.Viewport;
 
 namespace Metrician.App
 {
     internal sealed class MainForm : Form
     {
+        private const string ViewportTitle = "Metrician Viewports";
+        private const string GraphTitle = "Metrician Graph";
+
         private readonly WindowController _controller;
         private readonly FourUpViewport _viewport;
 
@@ -17,11 +20,12 @@ namespace Metrician.App
         {
             _controller = controller;
 
-            Text = "Metrician Viewports";
+            Text = ViewportTitle;
             ClientSize = new Size(1280, 800);
             BackColor = Color.FromArgb(30, 30, 35);
             ForeColor = Color.FromArgb(220, 220, 220);
             StartPosition = FormStartPosition.CenterScreen;
+            WindowState = FormWindowState.Maximized;
             Icon = AppIcon.Load();
 
             _viewport = new FourUpViewport { Dock = DockStyle.Fill };
@@ -41,6 +45,7 @@ namespace Metrician.App
             if (_viewport.Parent != this)
                 Controls.Add(_viewport);
             ResumeLayout(performLayout: true);
+            Text = ViewportTitle;
         }
 
         /// <summary>Hosts the supplied graph control in place of the viewport.</summary>
@@ -52,6 +57,7 @@ namespace Metrician.App
             graphHost.Dock = DockStyle.Fill;
             Controls.Add(graphHost);
             ResumeLayout(performLayout: true);
+            Text = GraphTitle;
         }
 
         public void UpdateModeRadio(DisplayMode mode)

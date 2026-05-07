@@ -15,8 +15,7 @@ namespace Metrician.App
             ClientSize = new Size(900, 600);
             BackColor = Color.FromArgb(30, 30, 35);
             ForeColor = Color.FromArgb(220, 220, 220);
-            StartPosition = FormStartPosition.Manual;
-            Location = new Point(120, 120);
+            StartPosition = FormStartPosition.CenterScreen;
             Icon = AppIcon.Load();
         }
 

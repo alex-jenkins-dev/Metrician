@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(MetricianLibraryFrameworks)</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- PointCloud uses unsafe pixel writes via LockBits for high-throughput
+         rendering (10x+ faster than per-point GDI+ FillRectangle). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- System.Drawing in lieu of UseWindowsForms; this project does not
+         use any WinForms types. -->
+    <PackageReference Include="System.Drawing.Common" Version="8.0.10" />
+    <Using Include="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Metrician.Library.Rendering\Metrician.Library.Rendering.csproj" />
+  </ItemGroup>
+
+</Project>

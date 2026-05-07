@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(MetricianHostFramework)</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWindowsForms>true</UseWindowsForms>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Metrician.Library.Renderables\Metrician.Library.Renderables.csproj" />
+    <ProjectReference Include="..\Metrician.Core.Graph\Metrician.Core.Graph.csproj" />
+    <ProjectReference Include="..\Metrician.Library.Rendering\Metrician.Library.Rendering.csproj" />
+    <ProjectReference Include="..\Metrician.Library.Renderables\Metrician.Library.Renderables.csproj" />
+  </ItemGroup>
+
+  <Target Name="CopyToAppPlugins" AfterTargets="Build">
+    <PropertyGroup>
+      <AppPluginsDir>$(MSBuildThisFileDirectory)..\Metrician.App\bin\$(Configuration)\$(TargetFramework)\Plugins\</AppPluginsDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(AppPluginsDir)" Condition="!Exists('$(AppPluginsDir)')" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(AppPluginsDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

@@ -11,6 +11,7 @@
 
   <PropertyGroup>
     <MetricianLibraryFrameworks>net8.0-windows;net10.0-windows</MetricianLibraryFrameworks>
+    <MetricianCoreLibraryFrameworks>net8.0;net10.0</MetricianCoreLibraryFrameworks>
     <MetricianHostFramework>net10.0-windows</MetricianHostFramework>
   </PropertyGroup>
 	
