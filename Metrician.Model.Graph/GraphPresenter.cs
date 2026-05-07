@@ -13,6 +13,7 @@ namespace Metrician.Model.Graph
 
         private Vector2 _pan = Vector2.Zero;
         private float _zoom = 1f;
+        private float _dpiScale = 1f;
         private NodeId? _selectedNode;
         private PinId? _selectedPin;
 
@@ -37,6 +38,7 @@ namespace Metrician.Model.Graph
         public LayoutMetrics Metrics => _metrics;
         public Vector2 Pan => _pan;
         public float Zoom => _zoom;
+        public float DpiScale => _dpiScale;
         public NodeId? SelectedNode => _selectedNode;
         public PinId? SelectedPin => _selectedPin;
 
@@ -45,17 +47,30 @@ namespace Metrician.Model.Graph
         public event EventHandler<PinId?>? PinSelectionChanged;
         public event EventHandler<(NodeId Id, INodeTemplate Template)>? NodeSpawned;
 
-        public Vector2 ScreenToCanvas(Vector2 screen) =>
-            new((screen.X - _pan.X) / _zoom, (screen.Y - _pan.Y) / _zoom);
+        public Vector2 ScreenToCanvas(Vector2 screen)
+        {
+            float s = _zoom * _dpiScale;
+            return new((screen.X - _pan.X) / s, (screen.Y - _pan.Y) / s);
+        }
 
-        public Vector2 CanvasToScreen(Vector2 canvas) =>
-            new(canvas.X * _zoom + _pan.X, canvas.Y * _zoom + _pan.Y);
+        public Vector2 CanvasToScreen(Vector2 canvas)
+        {
+            float s = _zoom * _dpiScale;
+            return new(canvas.X * s + _pan.X, canvas.Y * s + _pan.Y);
+        }
 
         public void ApplyView(Vector2 pan, float zoom)
         {
             if (_pan == pan && _zoom == zoom) return;
             _pan = pan;
             _zoom = zoom;
+            Raise();
+        }
+
+        public void SetDpiScale(float dpiScale)
+        {
+            if (dpiScale <= 0f || MathF.Abs(_dpiScale - dpiScale) < 1e-6f) return;
+            _dpiScale = dpiScale;
             Raise();
         }
 

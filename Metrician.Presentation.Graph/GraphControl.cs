@@ -3,6 +3,7 @@
 
 using System.ComponentModel;
 using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.Numerics;
 using Metrician.Core.Graph;
 using Metrician.Model.Graph;
@@ -53,6 +54,14 @@ namespace Metrician.Presentation.Graph
             Presenter.ViewChanged += (_, _) => Invalidate();
             Mouse.Changed += OnMouseChanged;
             Mouse.ContextMenuRequested += OnContextMenuRequested;
+
+            Presenter.SetDpiScale(DeviceDpi / 96f);
+        }
+
+        protected override void OnDpiChangedAfterParent(EventArgs e)
+        {
+            base.OnDpiChangedAfterParent(e);
+            Presenter.SetDpiScale(DeviceDpi / 96f);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -60,12 +69,14 @@ namespace Metrician.Presentation.Graph
             base.OnPaint(e);
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
             var saved = g.Save();
             try
             {
+                float s = Presenter.Zoom * Presenter.DpiScale;
                 g.TranslateTransform(Presenter.Pan.X, Presenter.Pan.Y);
-                g.ScaleTransform(Presenter.Zoom, Presenter.Zoom);
+                g.ScaleTransform(s, s);
                 _painter.DrawAll(g, Presenter, Mouse.State);
             }
             finally
