@@ -75,6 +75,7 @@ namespace Metrician.Presentation.Graph
             BackColor = theme.MenuBackground;
             ForeColor = theme.MenuText;
             Padding = new Padding(1);
+            KeyPreview = true;
 
             _input = new PlaceholderTextBox
             {
@@ -86,7 +87,6 @@ namespace Metrician.Presentation.Graph
                 Placeholder = "Search anything",
             };
             _input.TextChanged += (_, _) => RefreshResults();
-            _input.KeyDown += OnInputKey;
 
             _list = new ListBox
             {
@@ -137,8 +137,10 @@ namespace Metrician.Presentation.Graph
             e.Graphics.DrawRectangle(border, 0, 0, Width - 1, Height - 1);
         }
 
-        private void OnInputKey(object? sender, KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
+            base.OnKeyDown(e);
+            if (e.Handled) return;
             switch (e.KeyCode)
             {
                 case Keys.Down:
