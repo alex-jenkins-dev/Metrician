@@ -13,10 +13,8 @@ namespace Metrician.Presentation.Graph
     {
         private sealed record SectionHeader(string Label);
 
-        // The framework's TextBox.PlaceholderText hides on focus (EM_SETCUEBANNER
-        // is sent with wParam=0). This subclass resends with wParam=1 so the
-        // placeholder stays visible while the box is focused, matching modern
-        // search-input conventions.
+        // WinForms' PlaceholderText hides on focus; resending EM_SETCUEBANNER
+        // with wParam=1 keeps it visible.
         private sealed class PlaceholderTextBox : TextBox
         {
             private const int EM_SETCUEBANNER = 0x1501;
@@ -50,9 +48,9 @@ namespace Metrician.Presentation.Graph
             }
         }
 
-        private readonly GraphPresenter _presenter;
+        private readonly INodeCatalog _catalog;
         private readonly GraphTheme _theme;
-        private readonly IReadOnlyList<INodeTemplate> _templates;
+        private readonly Action<string, Vector2> _spawnAt;
         private readonly Func<Vector2> _spawnAnchorCanvas;
         private readonly PlaceholderTextBox _input;
         private readonly ListBox _list;
@@ -60,14 +58,14 @@ namespace Metrician.Presentation.Graph
         private int _hoverIndex = -1;
 
         public SearchPalette(
-            GraphPresenter presenter,
+            INodeCatalog catalog,
             GraphTheme theme,
-            IReadOnlyList<INodeTemplate> templates,
+            Action<string, Vector2> spawnAt,
             Func<Vector2> spawnAnchorCanvas)
         {
-            _presenter = presenter;
+            _catalog = catalog;
             _theme = theme;
-            _templates = templates;
+            _spawnAt = spawnAt;
             _spawnAnchorCanvas = spawnAnchorCanvas;
 
             FormBorderStyle = FormBorderStyle.None;
@@ -168,7 +166,7 @@ namespace Metrician.Presentation.Graph
 
         private void RefreshResults()
         {
-            var results = NodeSearch.Run(_templates, _input.Text);
+            var results = NodeSearch.Run(_catalog, _input.Text);
             _hoverIndex = -1;
             _list.BeginUpdate();
             _list.Items.Clear();
@@ -194,7 +192,7 @@ namespace Metrician.Presentation.Graph
         private void InvokeSelected()
         {
             if (_list.SelectedItem is not SearchResult r) return;
-            _presenter.Spawn(r.Template, _spawnAnchorCanvas());
+            _spawnAt(r.TypeName, _spawnAnchorCanvas());
             Close();
         }
 
@@ -240,8 +238,8 @@ namespace Metrician.Presentation.Graph
                 && r.MatchedFieldKind != "title")
             {
                 string line1 = string.IsNullOrEmpty(r.Vendor)
-                    ? r.Label
-                    : $"{r.Label} - {r.Vendor}";
+                    ? r.Title
+                    : $"{r.Title} - {r.Vendor}";
                 string line2 = $"{r.MatchedFieldKind}: {Truncate(r.MatchedFieldText, 300)}";
                 text = line1 + Environment.NewLine + Environment.NewLine + line2;
             }
@@ -257,8 +255,6 @@ namespace Metrician.Presentation.Graph
         private static Color SectionColor(string sectionLabel) => sectionLabel switch
         {
             "Titles" => Color.FromArgb(50, 75, 110),
-            "Pin names" => Color.FromArgb(50, 95, 95),
-            "Pin types" => Color.FromArgb(80, 60, 100),
             "Vendors" => Color.FromArgb(105, 80, 50),
             "Descriptions" => Color.FromArgb(70, 70, 75),
             _ => Color.FromArgb(60, 60, 66),
@@ -344,7 +340,7 @@ namespace Metrician.Presentation.Graph
             const int padX = 8;
             const int padY = 4;
 
-            e.Graphics.DrawString(r.Label, labelFont, labelBrush,
+            e.Graphics.DrawString(r.Title, labelFont, labelBrush,
                 e.Bounds.X + padX, e.Bounds.Y + padY);
 
             if (!string.IsNullOrEmpty(r.Vendor))

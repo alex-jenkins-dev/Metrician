@@ -5,36 +5,29 @@ using Metrician.Core.Graph;
 
 namespace Metrician.Model.Graph
 {
-    public enum FieldFilter { All, Title, Vendor, Description, PinName, PinType }
+    public enum FieldFilter { All, Title, Vendor, Description }
 
     public sealed record SearchResult(
         float Score,
-        string Label,
+        string TypeName,
+        string Title,
         string Vendor,
         string MatchedFieldKind,
-        string MatchedFieldText,
-        INodeTemplate Template);
+        string MatchedFieldText);
 
     public static class NodeSearch
     {
         private sealed record Field(string Text, float Weight, string Kind, bool AllowSubsequence);
 
-        private sealed record TemplatePin(string Name, Type Type, PinDirection Direction);
-
-        private static readonly Dictionary<INodeTemplate, IReadOnlyList<TemplatePin>> _templatePinCache = new();
-
-        // Order matters: longer prefixes must be checked first ("pt:" before "p:").
         private static readonly (string Prefix, FieldFilter Filter)[] Prefixes =
         {
-            ("pt:", FieldFilter.PinType),
-            ("t:",  FieldFilter.Title),
-            ("v:",  FieldFilter.Vendor),
-            ("d:",  FieldFilter.Description),
-            ("p:",  FieldFilter.PinName),
+            ("t:", FieldFilter.Title),
+            ("v:", FieldFilter.Vendor),
+            ("d:", FieldFilter.Description),
         };
 
         public static IReadOnlyList<SearchResult> Run(
-            IReadOnlyList<INodeTemplate> templates,
+            INodeCatalog catalog,
             string query,
             int maxResults = 50)
         {
@@ -50,29 +43,27 @@ namespace Metrician.Model.Graph
 
             if (tokens.Length == 0)
             {
-                // Prefix-only query (e.g. "t:") browses every template through the
-                // requested field type. An unprefixed empty query stays empty.
                 if (filter == FieldFilter.All) return Array.Empty<SearchResult>();
 
-                foreach (var template in templates)
+                foreach (var info in catalog.All)
                 {
-                    var fields = CollectTemplateFields(template, filter);
+                    var fields = CollectFields(info, filter);
                     foreach (var f in fields)
                     {
                         if (string.IsNullOrEmpty(f.Text)) continue;
                         results.Add(new SearchResult(
                             Score: 0f,
-                            template.Title, template.Vendor,
-                            f.Kind, f.Text,
-                            template));
+                            info.TypeName,
+                            info.Title, info.Vendor,
+                            f.Kind, f.Text));
                     }
                 }
             }
             else
             {
-                foreach (var template in templates)
+                foreach (var info in catalog.All)
                 {
-                    var fields = CollectTemplateFields(template, filter);
+                    var fields = CollectFields(info, filter);
                     if (fields.Count == 0) continue;
                     var (score, bestField) = Score(fields, tokens);
                     if (score > 0)
@@ -80,9 +71,9 @@ namespace Metrician.Model.Graph
                         var matched = fields[bestField];
                         results.Add(new SearchResult(
                             score,
-                            template.Title, template.Vendor,
-                            matched.Kind, matched.Text,
-                            template));
+                            info.TypeName,
+                            info.Title, info.Vendor,
+                            matched.Kind, matched.Text));
                     }
                 }
             }
@@ -90,7 +81,7 @@ namespace Metrician.Model.Graph
             return results
                 .OrderBy(r => SectionRank(r.MatchedFieldKind))
                 .ThenByDescending(r => r.Score)
-                .ThenBy(r => r.Label, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(r => r.Title, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(r => r.MatchedFieldText, StringComparer.OrdinalIgnoreCase)
                 .Take(maxResults)
                 .ToList();
@@ -99,18 +90,14 @@ namespace Metrician.Model.Graph
         public static int SectionRank(string matchedFieldKind) => matchedFieldKind switch
         {
             "title" => 0,
-            "input pin" or "output pin" => 1,
-            "input type" or "output type" => 2,
-            "vendor" => 3,
-            "description" => 4,
+            "vendor" => 1,
+            "description" => 2,
             _ => 99,
         };
 
         public static string SectionLabel(string matchedFieldKind) => matchedFieldKind switch
         {
             "title" => "Titles",
-            "input pin" or "output pin" => "Pin names",
-            "input type" or "output type" => "Pin types",
             "vendor" => "Vendors",
             "description" => "Descriptions",
             _ => "Other",
@@ -126,65 +113,16 @@ namespace Metrician.Model.Graph
             return (FieldFilter.All, raw);
         }
 
-        private static IReadOnlyList<Field> CollectTemplateFields(INodeTemplate t, FieldFilter filter)
+        private static IReadOnlyList<Field> CollectFields(NodeTypeInfo info, FieldFilter filter)
         {
             var fields = new List<Field>();
             if (filter is FieldFilter.All or FieldFilter.Title)
-                fields.Add(new(t.Title, 3f, "title", AllowSubsequence: true));
+                fields.Add(new(info.Title, 3f, "title", AllowSubsequence: true));
             if (filter is FieldFilter.All or FieldFilter.Vendor)
-                fields.Add(new(t.Vendor, 1f, "vendor", AllowSubsequence: true));
+                fields.Add(new(info.Vendor, 1f, "vendor", AllowSubsequence: true));
             if (filter is FieldFilter.All or FieldFilter.Description)
-                fields.Add(new(t.Description, 0.8f, "description", AllowSubsequence: false));
-
-            if (filter is FieldFilter.All or FieldFilter.PinName or FieldFilter.PinType)
-            {
-                var pins = PreviewTemplatePins(t);
-                if (filter is FieldFilter.All or FieldFilter.PinName)
-                {
-                    foreach (var pin in pins)
-                    {
-                        string kind = pin.Direction == PinDirection.Input ? "input pin" : "output pin";
-                        fields.Add(new(pin.Name, 1.5f, kind, AllowSubsequence: true));
-                    }
-                }
-                if (filter is FieldFilter.All or FieldFilter.PinType)
-                {
-                    foreach (var pin in pins)
-                    {
-                        string kind = pin.Direction == PinDirection.Input ? "input type" : "output type";
-                        fields.Add(new(pin.Type.Name, 1.5f, kind, AllowSubsequence: true));
-                    }
-                }
-            }
+                fields.Add(new(info.Description, 0.8f, "description", AllowSubsequence: false));
             return fields;
-        }
-
-        // Spins up an ephemeral GraphWorld, instantiates the template through the
-        // real authoring path, snapshots its pins, and tears the node down. The
-        // resulting list is cached so each template pays this once per session.
-        private static IReadOnlyList<TemplatePin> PreviewTemplatePins(INodeTemplate template)
-        {
-            if (_templatePinCache.TryGetValue(template, out var cached)) return cached;
-
-            var pins = new List<TemplatePin>();
-            var temp = new GraphWorld();
-            try
-            {
-                var id = temp.Add(template);
-                foreach (var pin in temp.Pins.Inputs(id))
-                    pins.Add(new TemplatePin(pin.Id.Name, pin.ValueType, PinDirection.Input));
-                foreach (var pin in temp.Pins.Outputs(id))
-                    pins.Add(new TemplatePin(pin.Id.Name, pin.ValueType, PinDirection.Output));
-                temp.Remove(id);
-            }
-            catch
-            {
-                // A template that can't instantiate cleanly (e.g. throws during
-                // Configure) just contributes no pins to search.
-            }
-
-            _templatePinCache[template] = pins;
-            return pins;
         }
 
         private static (float Score, int BestField) Score(IReadOnlyList<Field> fields, string[] tokens)

@@ -175,9 +175,12 @@ namespace Metrician.Presentation.Graph
 
         private void OpenSearchPalette()
         {
+            if (World.Resolve<INodeCatalog>() is not { } catalog) return;
+
             var palette = new SearchPalette(
-                Presenter, Theme,
-                AvailableTemplates.ToList(),
+                catalog, Theme,
+                spawnAt: (typeName, canvasPos) =>
+                    Presenter.Spawn(catalog.Create(typeName), canvasPos),
                 spawnAnchorCanvas: () => Presenter.ScreenToCanvas(
                     new Vector2(ClientSize.Width / 2f, ClientSize.Height / 2f)));
 

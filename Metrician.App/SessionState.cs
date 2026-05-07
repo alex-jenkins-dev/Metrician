@@ -22,12 +22,14 @@ namespace Metrician.App
         public RenderSink RenderSink { get; }
 
         private readonly NodeTemplateRegistry _templates = new();
+        private readonly NodeCatalog _catalog = new();
         private readonly TemplateNameSystem _templateNames;
 
         public SessionState()
         {
             RenderSink = new RenderSink(World);
             World.Register<IRenderableRegistry>(Renderables);
+            World.Register<INodeCatalog>(_catalog);
             _templateNames = new TemplateNameSystem(World.Nodes);
 
             GraphControl = new GraphControl(World);
@@ -36,13 +38,13 @@ namespace Metrician.App
                 Dock = DockStyle.Fill,
             };
 
-            var renderTemplate = new RenderNodeTemplate(
+            Func<INodeTemplate> renderFactory = () => new RenderNodeTemplate(
                 Renderables, World.RenderOptions, RenderSink.Publish);
 
-            _templates.Register(nameof(RenderNodeTemplate),
-                () => new RenderNodeTemplate(
-                    Renderables, World.RenderOptions, RenderSink.Publish));
+            _templates.Register(nameof(RenderNodeTemplate), renderFactory);
+            _catalog.Register(renderFactory);
 
+            var renderTemplate = renderFactory();
             GraphControl.PinnedTemplates.Add(renderTemplate);
             GraphControl.KeyShortcuts[Keys.R] = renderTemplate;
 
@@ -68,6 +70,7 @@ namespace Metrician.App
             foreach (var contribution in contributions)
             {
                 _templates.Register(contribution.Name, contribution.Create);
+                _catalog.Register(contribution.Create);
                 GraphControl.AvailableTemplates.Add(contribution.Create());
             }
         }
