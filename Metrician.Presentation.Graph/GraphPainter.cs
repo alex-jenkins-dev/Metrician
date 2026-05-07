@@ -62,7 +62,7 @@ namespace Metrician.Presentation.Graph
                 g.DrawPath(border, path);
 
             using (var titleBrush = new SolidBrush(_theme.Text))
-            using (var titleFont = new Font(_theme.FontFamily, 9f, FontStyle.Bold))
+            using (var titleFont = new Font(_theme.FontFamily, 12f, FontStyle.Bold, GraphicsUnit.Pixel))
             {
                 var titleSize = g.MeasureString(node.Title, titleFont);
                 float titleX = rect.X + (rect.Width - titleSize.Width) / 2f;
@@ -89,7 +89,7 @@ namespace Metrician.Presentation.Graph
             }
 
             using var labelBrush = new SolidBrush(_theme.Text);
-            using var labelFont = new Font(_theme.FontFamily, 8f);
+            using var labelFont = new Font(_theme.FontFamily, 10.67f, FontStyle.Regular, GraphicsUnit.Pixel);
 
             var selectedPin = p.SelectedPin;
 
@@ -118,7 +118,7 @@ namespace Metrician.Presentation.Graph
                     pos.X - m.PinRadius - sz.Width - 4, pos.Y - 7);
             }
 
-            using var footerFont = new Font(_theme.FontFamily, 7.5f, FontStyle.Italic);
+            using var footerFont = new Font(_theme.FontFamily, 10f, FontStyle.Italic, GraphicsUnit.Pixel);
             using var footerBrush = new SolidBrush(_theme.FooterText);
             string footerText = $"by {node.Vendor}";
             var footerSize = g.MeasureString(footerText, footerFont);

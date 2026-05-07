@@ -7,6 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <!-- The .exe's icon (taskbar, Alt-Tab thumbnail, file-explorer thumbnail,
          shortcut icon).  The same file is also embedded below so each Form
          can set its own .Icon at runtime. -->
@@ -24,10 +25,6 @@
     <ProjectReference Include="..\Metrician.Library.Bridge\Metrician.Library.Bridge.csproj" />
     <ProjectReference Include="..\Metrician.Model.Graph\Metrician.Model.Graph.csproj" />
     <ProjectReference Include="..\Metrician.Presentation.Graph\Metrician.Presentation.Graph.csproj" />
-    <!-- Build-only dependency: Geometry is loaded at runtime from the Plugins
-         folder, not compiled into the host. The reference exists so the
-         solution build orders Geometry before App and the plugin DLL is
-         present when the app runs. -->
     <ProjectReference Include="..\Metrician.Nodes.Geometry\Metrician.Nodes.Geometry.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <Private>false</Private>
