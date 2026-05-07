@@ -29,7 +29,7 @@ namespace Metrician.Presentation.Graph
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                FixedPanel = FixedPanel.Panel2,
+                FixedPanel = FixedPanel.None,
                 BackColor = theme.MenuBorder,
                 Panel1MinSize = MinPanelWidth,
                 Panel2MinSize = MinPanelWidth,

@@ -146,6 +146,7 @@ namespace Metrician.Presentation.Graph
 
         protected override bool IsInputKey(Keys keyData) =>
             keyData == Keys.Delete
+            || keyData == (Keys.Control | Keys.F)
             || KeyShortcuts.ContainsKey(keyData)
             || base.IsInputKey(keyData);
 
@@ -153,6 +154,12 @@ namespace Metrician.Presentation.Graph
         {
             base.OnKeyDown(e);
             if (e.Handled) return;
+            if (e.KeyData == (Keys.Control | Keys.F))
+            {
+                OpenSearchPalette();
+                e.Handled = true;
+                return;
+            }
             if (e.KeyData == Keys.Delete)
             {
                 if (Presenter.DeleteSelected())
@@ -164,6 +171,22 @@ namespace Metrician.Presentation.Graph
                 Presenter.Spawn(template, Presenter.ScreenToCanvas(Mouse.LastScreen));
                 e.Handled = true;
             }
+        }
+
+        private void OpenSearchPalette()
+        {
+            var palette = new SearchPalette(
+                Presenter, Theme,
+                AvailableTemplates.ToList(),
+                spawnAnchorCanvas: () => Presenter.ScreenToCanvas(
+                    new Vector2(ClientSize.Width / 2f, ClientSize.Height / 2f)));
+
+            var size = LogicalToDeviceUnits(new Size(420, 360));
+            palette.Size = size;
+            palette.Location = PointToScreen(new Point(
+                (ClientSize.Width - size.Width) / 2,
+                ClientSize.Height / 6));
+            palette.Show(FindForm());
         }
 
         private static bool TryMapButton(MouseButtons button, out MouseButton mapped)
